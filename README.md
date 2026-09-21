@@ -21,7 +21,12 @@
 .
 ├── README.md            # 唯一入口：信息、进度、约定
 ├── CONTRIBUTING.md      # 协作规则：分支、提交、PR
-├── requirements.txt     # Python 依赖（环境复现用）
+├── requirements.txt     # Python 依赖清单（按需增减）
+├── requirements.lock.txt# 已验证的精确版本（队友装这个，结果才一致）
+├── setup/
+│   ├── 一键装环境.bat     # 队友双击这个就行
+│   ├── setup_env.ps1    # 一键装环境：建 .venv + 装依赖 + 自检
+│   └── smoke_test.py    # 环境自检：依赖是否齐全、中文绘图是否正常
 ├── code/
 │   ├── common/          # 公共代码：路径、绘图样式、数据读取
 │   ├── q1/main.py       # 每个问题的唯一入口，统一叫 main.py
@@ -47,26 +52,50 @@
 
 ## 2. 快速开始
 
-```bash
-# 1. 克隆（首次）
-git clone https://github.com/pp18511/work.git && cd work
+### 2.1 装环境（每人做一次，约 3~10 分钟）
 
-# 2. 配置身份（每人只做一次，写自己的名字）
-git config user.name  "你的名字"
-git config user.email "你的邮箱"
+Windows 用户：克隆仓库后，**双击 `setup\一键装环境.bat`**，然后等它跑完。
 
-# 3. 环境
-python -m venv .venv && .venv\Scripts\activate    # Windows
-pip install -r requirements.txt
+它会自动完成：找 Python（优先 3.12）→ 建 `.venv` → 装依赖 → 跑自检并生成一张中文测试图。
+脚本是幂等的，环境坏了、换电脑了，再双击一次就行。
 
-# 4. 放数据：把官方数据放进 data/raw/（从网盘取，不要 git push）
+命令行等价写法：
 
-# 5. 一键复现全部结果
-python code/run_all.py          # 全部
-python code/run_all.py q1 q3    # 只跑 q1、q3
+```powershell
+git clone https://github.com/pp18511/work.git
+cd work
+powershell -ExecutionPolicy Bypass -File setup\setup_env.ps1
+
+# 可选参数
+#   -Python 3.10   指定 Python 版本
+#   -Official      不用清华镜像，改用官方 PyPI
+#   -Recreate      删掉旧 .venv 重建
 ```
 
+macOS / Linux：
+
+```bash
+python3 -m venv .venv && .venv/bin/pip install -r requirements.lock.txt
+.venv/bin/python setup/smoke_test.py
+```
+
+### 2.2 每天开工
+
+```bash
+git pull                        # 先拉别人今天的改动
+.venv\Scripts\activate          # 激活环境（命令行前面出现 (.venv)）
+python code\run_all.py          # 跑全部；只跑某题：python code\run_all.py q1 q3
+```
+
+用 VS Code 的话，`Ctrl+Shift+P → Python: Select Interpreter` 选 `.venv\Scripts\python.exe`，之后直接按运行键就行。
+
+### 2.3 数据
+
+把官方数据放进 `data/raw/`（从网盘取，不要 git push）。
+
 **复现约定**：任何结果都必须能由 `python code/run_all.py` 在干净环境下重新生成。跑不出来的结果 = 不存在的结果。
+
+**依赖改动约定**：谁要加新库（如 `pulp`、`cvxpy`），先改 `requirements.txt`，装好后执行 `.venv\Scripts\pip freeze > requirements.lock.txt` 并提交，队友 `git pull` 后重跑一次装环境脚本即可对齐版本。
 
 ## 3. 数据说明
 
