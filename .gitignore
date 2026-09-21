@@ -57,7 +57,9 @@ slprj/
 .~lock.*
 
 # ================= 编辑器 / 系统 =================
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
 .idea/
 .DS_Store
 Thumbs.db
@@ -69,4 +71,3 @@ desktop.ini
 secrets.json
 *.pem
 *.key
-

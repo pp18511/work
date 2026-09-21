@@ -1,0 +1,39 @@
+{
+  // ============ 让 VS Code 变快的关键配置 ============
+  // .venv 里有 3 万多个文件。不排除的话，VS Code 的文件监视器、搜索、Python 扩展
+  // 会一直扫描它，导致提交、保存、搜索全部变卡。
+  "files.watcherExclude": {
+    "**/.venv/**": true,
+    "**/__pycache__/**": true,
+    "**/.pytest_cache/**": true,
+    "**/data/**": true,
+    "**/output/**": true,
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true
+  },
+  "search.exclude": {
+    "**/.venv": true,
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/data": true,
+    "**/output": true
+  },
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/.pytest_cache": true
+  },
+
+  // 关掉后台自动 fetch。国内访问 GitHub 不稳定，每隔几分钟一次 fetch 会让
+  // 源代码管理面板一直转圈，提交也跟着排队。改成需要时手动点"同步更改"。
+  "git.autofetch": false,
+  "git.autorefresh": true,
+  "git.detectSubmodules": false,
+  "git.confirmSync": false,
+
+  // 统一用项目自带的 .venv，避免编辑器去用系统里的其他 Python
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+
+  // 换行符统一成 LF，和 .gitattributes 保持一致，避免"整个文件都改了"的假 diff
+  "files.eol": "\n"
+}
+
