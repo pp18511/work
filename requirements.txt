@@ -1,0 +1,20 @@
+# 环境复现用依赖。装完环境后建议执行 pip freeze > requirements.lock.txt 锁版本。
+numpy
+pandas
+scipy
+matplotlib
+scikit-learn
+statsmodels
+openpyxl
+seaborn
+jupyter
+
+# 按题目需要再取消注释：
+# pulp            # 线性 / 整数规划
+# cvxpy           # 凸优化
+# networkx        # 图论
+# sympy           # 符号推导
+# xgboost         # 集成学习
+# torch           # 神经网络
+# geopandas       # 空间数据
+

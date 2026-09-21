@@ -1,0 +1,72 @@
+# ================= 数据与结果：不进仓库（走网盘 / LFS） =================
+data/raw/*
+!data/raw/.gitkeep
+data/interim/*
+!data/interim/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+output/figures/*
+!output/figures/.gitkeep
+output/tables/*
+!output/tables/.gitkeep
+output/results/*
+!output/results/.gitkeep
+
+# ================= Python =================
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+*.log
+
+# ================= MATLAB =================
+*.asv
+*.m~
+*.autosave
+slprj/
+*.slxc
+
+# ================= LaTeX =================
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.out
+*.synctex.gz
+*.toc
+*.lof
+*.lot
+*.nav
+*.snm
+*.vrb
+*.xdv
+
+# ================= Office 临时文件 =================
+~$*.docx
+~$*.doc
+~$*.xlsx
+~$*.xls
+~$*.pptx
+~$*.ppt
+.~lock.*
+
+# ================= 编辑器 / 系统 =================
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ================= 敏感信息 =================
+.env
+.env.*
+secrets.json
+*.pem
+*.key
+

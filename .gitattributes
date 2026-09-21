@@ -1,0 +1,25 @@
+# 统一换行符：避免不同系统（Windows / macOS）协作时出现"整个文件都变了"的假 diff
+* text=auto eol=lf
+
+# Windows 脚本保持 CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 二进制文件不做换行转换
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary
+*.xlsx binary
+*.docx binary
+*.pptx binary
+*.zip binary
+*.mat binary
+
+# 语言标记：让 GitHub 的语言统计更准确
+*.py linguist-language=Python
+*.m linguist-language=MATLAB
+*.tex linguist-language=TeX
+*.ipynb linguist-documentation
+
