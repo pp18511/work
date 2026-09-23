@@ -1,0 +1,844 @@
+import pandas as pd
+
+# ============================================================
+# D题 问题一：三种机型 × 15个服务区 最大安全载荷计算
+# ============================================================
+
+# ------------------------------------------------------------
+# 1. 基础参数
+# ------------------------------------------------------------
+
+G = 9.81                  # 重力加速度 m/s^2
+ETA_UP = 0.72             # 爬升能耗效率
+RHO = 0.20                # 返航安全余量 20%
+J_TO_KWH = 3.6e6          # 1 kWh = 3.6×10^6 J
+TOL = 1e-6                # 二分搜索精度
+
+
+# ------------------------------------------------------------
+# 2. 三种无人机参数
+#
+# Q     : 最大载货质量 kg
+# L0    : 空载标准航程 km
+# LF    : 满载标准航程 km
+# E_use : 单组电池可用能量 kWh
+# M     : 无人机自身质量 kg
+#
+# !!! M 请根据题目附件填写真实数值 !!!
+# ------------------------------------------------------------
+
+DRONES = {
+    "A": {
+        "Q": 25.0,
+        "L0": 25.0,
+        "LF": 20.0,
+        "E_use": 4.5,
+        "M": 70.0
+    },
+
+    "B": {
+        "Q": 30.0,
+        "L0": 28.0,
+        "LF": 16.0,
+        "E_use": 4.0,
+        "M": 65.0
+    },
+
+    "C": {
+        "Q": 80.0,
+        "L0": 26.0,
+        "LF": 12.0,
+        "E_use": 8.0,
+        "M": 69.9
+    }
+}
+
+
+# ------------------------------------------------------------
+# 3. 读取航段数据
+# ------------------------------------------------------------
+
+FILE_PATH = r"D:\华为杯二十三届\航段距离与爬升下降数据.xlsx"
+
+df = pd.read_excel(FILE_PATH)
+
+print("原始航段数据：")
+print(df.head())
+
+
+# ------------------------------------------------------------
+# 4. 整理成 15 个服务区的往返参数
+#
+# 对每个服务区保存：
+# d       : 单程水平距离 km
+# h_out   : O01 → Si 去程爬升 m
+# h_back  : Si → O01 返程爬升 m
+# ------------------------------------------------------------
+
+services = {}
+
+for _, row in df.iterrows():
+
+    route = str(row["航段"])
+    distance = float(row["距离（km）"])
+    climb = float(row["爬升（m）"])
+
+    start, end = route.split("→")
+
+    # 去程：O01 → Si
+    if start == "O01":
+
+        service = end
+
+        if service not in services:
+            services[service] = {}
+
+        services[service]["d"] = distance
+        services[service]["h_out"] = climb
+
+    # 返程：Si → O01
+    elif end == "O01":
+
+        service = start
+
+        if service not in services:
+            services[service] = {}
+
+        services[service]["h_back"] = climb
+
+
+# ------------------------------------------------------------
+# 5. 等效航程函数 L_g(q)
+#
+# L_g(q)
+# = L0 - (L0-LF)*(q/Q)^(3/2)
+# ------------------------------------------------------------
+
+def equivalent_range(q, drone):
+
+    L0 = drone["L0"]
+    LF = drone["LF"]
+    Q = drone["Q"]
+
+    # 防止浮点误差
+    q = max(0.0, min(q, Q))
+
+    return L0 - (L0 - LF) * (q / Q) ** 1.5
+
+
+# ------------------------------------------------------------
+# 6. 计算完整往返能耗
+#
+# E_trip =
+#
+# 去程水平能耗
+# + 返程水平能耗
+# + 去程爬升能耗
+# + 返程爬升能耗
+#
+# ------------------------------------------------------------
+
+def trip_energy(q, drone, d, h_out, h_back):
+
+    E_use = drone["E_use"]
+    L0 = drone["L0"]
+    M = drone["M"]
+
+    # ========================================================
+    # ① 载荷 q 下的等效航程
+    # ========================================================
+
+    Lq = equivalent_range(q, drone)
+
+
+    # ========================================================
+    # ② 去程水平巡航能耗
+    #
+    # E_hor_out = E_use * d / L(q)
+    # ========================================================
+
+    E_hor_out = E_use * d / Lq
+
+
+    # ========================================================
+    # ③ 返程水平巡航能耗
+    #
+    # 卸货后为空载
+    #
+    # E_hor_back = E_use * d / L0
+    # ========================================================
+
+    E_hor_back = E_use * d / L0
+
+
+    # ========================================================
+    # ④ 去程爬升能耗
+    #
+    # E_up_out =
+    # (M + q) * g * h_out
+    # --------------------
+    # eta_up * 3.6e6
+    #
+    # 单位：kWh
+    # ========================================================
+
+    E_up_out = (
+        (M + q)
+        * G
+        * h_out
+        / (ETA_UP * J_TO_KWH)
+    )
+
+
+    # ========================================================
+    # ⑤ 返程爬升能耗
+    #
+    # 卸货后只有无人机自身质量
+    # ========================================================
+
+    E_up_back = (
+        M
+        * G
+        * h_back
+        / (ETA_UP * J_TO_KWH)
+    )
+
+
+    # ========================================================
+    # ⑥ 总往返能耗
+    # ========================================================
+
+    E_total = (
+        E_hor_out
+        + E_hor_back
+        + E_up_out
+        + E_up_back
+    )
+
+
+    # 返回详细结果，方便后面论文分析
+    return {
+        "Lq": Lq,
+        "E_hor_out": E_hor_out,
+        "E_hor_back": E_hor_back,
+        "E_up_out": E_up_out,
+        "E_up_back": E_up_back,
+        "E_total": E_total,
+    }
+
+
+# ------------------------------------------------------------
+# 7. 判断给定载荷是否安全
+#
+# E_trip(q) <= (1-rho)*E_use
+# ------------------------------------------------------------
+
+def is_safe(q, drone, d, h_out, h_back, rho=RHO):
+
+    energy = trip_energy(
+        q,
+        drone,
+        d,
+        h_out,
+        h_back
+    )["E_total"]
+
+    allowed_energy = (1 - rho) * drone["E_use"]
+
+    return energy <= allowed_energy
+
+
+# ------------------------------------------------------------
+# 8. 二分法求最大安全载荷
+# ------------------------------------------------------------
+
+def max_safe_payload(
+        drone,
+        d,
+        h_out,
+        h_back,
+        rho=RHO,
+        tol=TOL
+):
+
+    Q = drone["Q"]
+
+    # ========================================================
+    # 特殊情况1：
+    # 即使空载也不能安全往返
+    # ========================================================
+
+    if not is_safe(
+        0,
+        drone,
+        d,
+        h_out,
+        h_back,
+        rho
+    ):
+        return 0.0, False
+
+
+    # ========================================================
+    # 特殊情况2：
+    # 满载也可以安全往返
+    #
+    # 此时无需二分，最大安全载荷就是额定载荷
+    # ========================================================
+
+    if is_safe(
+        Q,
+        drone,
+        d,
+        h_out,
+        h_back,
+        rho
+    ):
+        return Q, True
+
+
+    # ========================================================
+    # 正常情况：二分搜索
+    # ========================================================
+
+    left = 0.0
+    right = Q
+
+    while right - left > tol:
+
+        mid = (left + right) / 2
+
+        if is_safe(
+            mid,
+            drone,
+            d,
+            h_out,
+            h_back,
+            rho
+        ):
+
+            # mid 安全
+            # 最大安全载荷还可能更大
+            left = mid
+
+        else:
+
+            # mid 不安全
+            # 最大安全载荷一定在左侧
+            right = mid
+
+    return left, True
+
+
+# ------------------------------------------------------------
+# 9. 对 3种机型 × 15个服务区 批量计算
+# ------------------------------------------------------------
+
+results = []
+
+for service in sorted(services.keys()):
+
+    d = services[service]["d"]
+    h_out = services[service]["h_out"]
+    h_back = services[service]["h_back"]
+
+    for drone_name, drone in DRONES.items():
+
+        q_safe, feasible = max_safe_payload(
+            drone,
+            d,
+            h_out,
+            h_back
+        )
+
+        # 在最大安全载荷处重新计算能耗
+        energy_info = trip_energy(
+            q_safe,
+            drone,
+            d,
+            h_out,
+            h_back
+        )
+
+        allowed_energy = (
+            (1 - RHO)
+            * drone["E_use"]
+        )
+
+        results.append({
+
+            "服务区": service,
+
+            "机型": drone_name,
+
+            "单程距离/km": d,
+
+            "去程爬升/m": h_out,
+
+            "返程爬升/m": h_back,
+
+            "额定最大载荷/kg":
+                drone["Q"],
+
+            "最大安全载荷/kg":
+                q_safe,
+
+            "最大安全载荷等效航程/km":
+                energy_info["Lq"],
+
+            "去程水平能耗/kWh":
+                energy_info["E_hor_out"],
+
+            "返程水平能耗/kWh":
+                energy_info["E_hor_back"],
+
+            "去程爬升能耗/kWh":
+                energy_info["E_up_out"],
+
+            "返程爬升能耗/kWh":
+                energy_info["E_up_back"],
+
+            "往返总能耗/kWh":
+                energy_info["E_total"],
+
+            "允许最大能耗/kWh":
+                allowed_energy,
+
+            "安全余量":
+                RHO,
+
+            "是否可执行":
+                feasible
+        })
+
+
+# ------------------------------------------------------------
+# 10. 转为 DataFrame
+# ------------------------------------------------------------
+
+result_df = pd.DataFrame(results)
+
+
+# 数值保留
+result_df = result_df.round({
+
+    "单程距离/km": 3,
+
+    "去程爬升/m": 1,
+
+    "返程爬升/m": 1,
+
+    "最大安全载荷/kg": 4,
+
+    "最大安全载荷等效航程/km": 4,
+
+    "去程水平能耗/kWh": 5,
+
+    "返程水平能耗/kWh": 5,
+
+    "去程爬升能耗/kWh": 5,
+
+    "返程爬升能耗/kWh": 5,
+
+    "往返总能耗/kWh": 5,
+
+    "允许最大能耗/kWh": 5
+})
+
+
+# ------------------------------------------------------------
+# 11. 输出完整结果
+# ------------------------------------------------------------
+
+print("\n==============================")
+print("最大安全载荷计算结果")
+print("==============================")
+
+print(
+    result_df[
+        [
+            "服务区",
+            "机型",
+            "最大安全载荷/kg",
+            "往返总能耗/kWh",
+            "允许最大能耗/kWh"
+        ]
+    ]
+)
+
+
+# ------------------------------------------------------------
+# 12. 生成论文最需要的 3×15 最大安全载荷矩阵
+# ------------------------------------------------------------
+
+payload_matrix = result_df.pivot(
+    index="服务区",
+    columns="机型",
+    values="最大安全载荷/kg"
+)
+
+print("\n==============================")
+print("3种机型 × 15服务区 最大安全载荷矩阵")
+print("==============================")
+
+print(payload_matrix)
+
+
+# ------------------------------------------------------------
+# 13. 保存到 Excel
+# ------------------------------------------------------------
+
+OUTPUT_FILE = "最大安全载荷计算结果.xlsx"
+
+with pd.ExcelWriter(
+    OUTPUT_FILE,
+    engine="openpyxl"
+) as writer:
+
+    # 完整计算结果
+    result_df.to_excel(
+        writer,
+        sheet_name="详细计算结果",
+        index=False
+    )
+
+    # 3×15矩阵
+    payload_matrix.to_excel(
+        writer,
+        sheet_name="最大安全载荷矩阵"
+    )
+
+
+print(
+    f"\n计算完成，结果已经保存到：{OUTPUT_FILE}"
+)
+
+# ============================================================
+# 15. 绘制最大安全载荷对比图
+# ============================================================
+
+import matplotlib
+
+matplotlib.use("TkAgg")
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+# 中文字体
+plt.rcParams["font.sans-serif"] = ["SimHei"]
+plt.rcParams["axes.unicode_minus"] = False
+
+# ------------------------------------------------------------
+# 整理数据
+# ------------------------------------------------------------
+
+plot_df = result_df.pivot(
+    index="服务区",
+    columns="机型",
+    values="最大安全载荷/kg"
+)
+
+# 保证服务区按照 S001 ~ S015 排序
+plot_df = plot_df.sort_index()
+
+services_name = plot_df.index.tolist()
+
+A_data = plot_df["A"].values
+B_data = plot_df["B"].values
+C_data = plot_df["C"].values
+
+x = np.arange(len(services_name))
+
+width = 0.25
+
+
+# ------------------------------------------------------------
+# 绘图
+# ------------------------------------------------------------
+
+fig, ax = plt.subplots(figsize=(14, 7))
+
+bar1 = ax.bar(
+    x - width,
+    A_data,
+    width,
+    label="A型无人机"
+)
+
+bar2 = ax.bar(
+    x,
+    B_data,
+    width,
+    label="B型无人机"
+)
+
+bar3 = ax.bar(
+    x + width,
+    C_data,
+    width,
+    label="C型无人机"
+)
+
+
+# ------------------------------------------------------------
+# 坐标轴
+# ------------------------------------------------------------
+
+ax.set_xlabel(
+    "服务区",
+    fontsize=13
+)
+
+ax.set_ylabel(
+    "最大安全载荷 / kg",
+    fontsize=13
+)
+
+ax.set_title(
+    "三种机型在不同服务区的最大安全载荷对比",
+    fontsize=16
+)
+
+ax.set_xticks(x)
+
+ax.set_xticklabels(
+    services_name,
+    rotation=45
+)
+
+ax.legend()
+
+ax.grid(
+    axis="y",
+    linestyle="--",
+    alpha=0.4
+)
+
+
+# ------------------------------------------------------------
+# 在柱子顶部标数值
+# ------------------------------------------------------------
+
+def add_labels(bars):
+
+    for bar in bars:
+
+        height = bar.get_height()
+
+        ax.text(
+            bar.get_x() + bar.get_width()/2,
+            height,
+            f"{height:.1f}",
+            ha="center",
+            va="bottom",
+            fontsize=8
+        )
+
+
+add_labels(bar1)
+add_labels(bar2)
+add_labels(bar3)
+
+
+# ------------------------------------------------------------
+# 自动调整布局
+# ------------------------------------------------------------
+
+plt.tight_layout()
+
+
+# ------------------------------------------------------------
+# 保存高清图片
+# ------------------------------------------------------------
+
+plt.savefig(
+    "三种机型最大安全载荷对比图.png",
+    dpi=300,
+    bbox_inches="tight"
+)
+
+plt.show()
+
+# ============================================================
+# 15. 三机型最大安全载荷热力图
+# ============================================================
+
+import matplotlib
+
+matplotlib.use("TkAgg")
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+# ------------------------------------------------------------
+# 中文字体
+# ------------------------------------------------------------
+
+plt.rcParams["font.sans-serif"] = [
+    "Microsoft YaHei",
+    "SimHei"
+]
+
+plt.rcParams["axes.unicode_minus"] = False
+
+
+# ------------------------------------------------------------
+# 生成热力图矩阵
+#
+# 行：A/B/C
+# 列：S001~S015
+# ------------------------------------------------------------
+
+heatmap_df = result_df.pivot(
+    index="机型",
+    columns="服务区",
+    values="最大安全载荷/kg"
+)
+
+# 固定机型顺序
+heatmap_df = heatmap_df.reindex(
+    ["A", "B", "C"]
+)
+
+# 固定服务区顺序
+service_order = [
+    f"S{i:03d}"
+    for i in range(1, 16)
+]
+
+heatmap_df = heatmap_df.reindex(
+    columns=service_order
+)
+
+
+# ------------------------------------------------------------
+# 绘图
+# ------------------------------------------------------------
+
+fig, ax = plt.subplots(
+    figsize=(15, 4.8)
+)
+
+data = heatmap_df.values
+
+im = ax.imshow(
+    data,
+    aspect="auto",
+    cmap="YlOrRd"
+)
+
+
+# ------------------------------------------------------------
+# 坐标轴
+# ------------------------------------------------------------
+
+ax.set_xticks(
+    np.arange(
+        len(heatmap_df.columns)
+    )
+)
+
+ax.set_xticklabels(
+    heatmap_df.columns,
+    rotation=45,
+    ha="right"
+)
+
+ax.set_yticks(
+    np.arange(
+        len(heatmap_df.index)
+    )
+)
+
+ax.set_yticklabels(
+    [
+        "A型无人机",
+        "B型无人机",
+        "C型无人机"
+    ]
+)
+
+
+ax.set_xlabel(
+    "服务区",
+    fontsize=12
+)
+
+ax.set_ylabel(
+    "无人机机型",
+    fontsize=12
+)
+
+ax.set_title(
+    "三种机型在不同服务区的最大安全载荷热力图",
+    fontsize=15,
+    pad=15
+)
+
+
+# ------------------------------------------------------------
+# 在每个格子里面写载荷数值
+# ------------------------------------------------------------
+
+threshold = (
+    np.nanmax(data)
+    + np.nanmin(data)
+) / 2
+
+
+for i in range(data.shape[0]):
+
+    for j in range(data.shape[1]):
+
+        value = data[i, j]
+
+        if np.isnan(value):
+            continue
+
+        # 深色区域使用白字
+        text_color = (
+            "white"
+            if value > threshold
+            else "black"
+        )
+
+        ax.text(
+            j,
+            i,
+            f"{value:.1f}",
+            ha="center",
+            va="center",
+            fontsize=9,
+            color=text_color
+        )
+
+
+# ------------------------------------------------------------
+# 颜色条
+# ------------------------------------------------------------
+
+cbar = fig.colorbar(
+    im,
+    ax=ax,
+    pad=0.02
+)
+
+cbar.set_label(
+    "最大安全载荷 / kg",
+    rotation=90
+)
+
+
+# ------------------------------------------------------------
+# 保存
+# ------------------------------------------------------------
+
+plt.tight_layout()
+
+plt.savefig(
+    "图1_三机型最大安全载荷热力图.png",
+    dpi=300,
+    bbox_inches="tight"
+)
+
+plt.show()
