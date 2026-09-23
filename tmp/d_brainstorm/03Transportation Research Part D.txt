@@ -1,0 +1,2534 @@
+
+--- PAGE 1 ---
+Transportation Research Part D 90 (2021) 102668
+Available online 28 December 2020
+1361-9209/© 2020 Elsevier Ltd. All rights reserved.
+Energy consumption models for delivery drones: A comparison 
+and assessment 
+Juan Zhang
+*
+, James F. Campbell, Donald C. Sweeney II, Andrea C. Hupman 
+College of Business Administration, University of Missouri-St. Louis, 63121, USA   
+ARTICLE INFO  
+Keywords: 
+Unmanned aerial vehicle 
+UAV 
+Drone 
+Drone energy models 
+Energy consumption 
+Parcel delivery 
+ABSTRACT  
+Energy consumption is a critical constraint for drone delivery operations to achieve their full 
+potential of providing fast delivery, reducing cost, and cutting emissions. This paper provides a 
+uniform framework to facilitate understanding different drone energy consumption models and 
+the inter-relationships between key factors and performance measures to facilitate decision 
+making for drone delivery operations. We review, classify and assess drone energy consumption 
+models. We then document the very wide variations in the modeled energy consumption rates 
+resulting from differences in: (1) the scopes and features of the models; (2) the specific designs of 
+the drones; and (3) the details of their assumed operations and uses. The results show that great 
+care must be taken in adopting a particular drone energy consumption model and that more 
+research is needed, especially empirical research, to ensure the selected model accurately reflects 
+delivery drone designs and uses.   
+1. Introduction 
+Unmanned Aerial Vehicles (UAVs) or drones have been proposed as a method for delivering goods to consumers with benefits of 
+lower cost, increased speed, and reduced greenhouse gas emissions. For drone delivery, the drone energy requirements determine the 
+key performance metrics of range (or endurance), cost and emissions. An accurate estimation of drone energy consumption ensures 
+feasible as well as efficient operating decisions for drone delivery systems, as well as for all drone applications including surveillances, 
+wireless communications, inspections, agricultural operations, humanitarian assistance missions and others. However, many opti -
+mization models that design drone or truck-drone routes or drone delivery systems incorporate energy consumption only indirectly as 
+a fixed limit on drone endurance (flight time limit) or range (flight distance limit) (e.g., Murray and Chu, 2015; Chiang et al., 2019; 
+Kithacharoenchai et al., 2020 ). Other drone delivery research incorporates energy directly with an energy consumption model based 
+on the fundamental physical forces involved in flight or on field measurements (e.g., Kirchstein, 2020; Murray and Raj, 2020; Poikonen 
+and Golden, 2020; Stolaroff et al., 2018; Figliozzi, 2017; Dorling et al., 2017 ). Some of these drone energy consumption models are 
+quite simple with only a few parameters, while others are very complex comprised of multiple interdependent components that 
+provide detailed representations of the forces of flight and drone design. 
+However, these various drone energy models can produce widely divergent results in terms of the energy consumed for essentially 
+the same drone delivery operations, leading to wide differences in modeled drone ranges and emissions. These differences create the 
+* Corresponding author. 
+E-mail addresses: jzmq3@mail.umsl.edu (J. Zhang), campbell@umsl.edu (J.F. Campbell), sweeneyd@umsl.edu (D.C. Sweeney II), hupmana@ 
+umsl.edu (A.C. Hupman).  
+Contents lists available at ScienceDirect 
+Transportation Research Part D 
+journal homepag e: www.el sevier.com/loc ate/trd 
+https://doi.org/10.1016/j.trd.2020.102668    
+i An update to this article is included at the end
+
+--- PAGE 2 ---
+Transportation Research Part D 90 (2021) 102668
+2
+need to carefully delineate why such differences exist when modeling the same phenomena (i.e. drone flights or drone delivery) and to 
+assess the different approaches to modeling drone energy consumption. While we limit our consideration to models of battery-powered 
+aerial drones, such as those proposed for home delivery ( Lee, 2019; Josephs, 2019 ) and related activities (e.g., medical deliveries over 
+short ranges ( Cohen, 2019; Drones in HealthCare, 2020 )), our analyses and insights are also applicable and important to other ap -
+plications of drones with limited energy capacity. 
+The wide variation of energy consumption in published drone delivery research is a result of different scopes and features of the 
+models, different designs of the drones being modeled, and different assumed operations. Thus, current research has not reached 
+consensus on standards for drone energy consumption, nor on how to model delivery drone energy consumption – and therefore 
+existing models may not reflect drone delivery operations well. As drone technology is evolving rapidly, our work strives to help 
+improve understanding of drone energy consumption and to develop common standards. For conventional ground vehicles such as 
+trucks and cars, we have good fuel consumption standards thanks to decades of rigorous research from government agencies, uni -
+versities and manufacturers ( Barth et al., 2005 ). Given that the operations of drones are more sensitive to the energy capacity than 
+those of conventional vehicles ( Cheng et al., 2020 ), it is critical to develop good understanding and estimation of drone energy 
+consumption. 
+The key contributions of this paper are to: (1) review and classify key drone energy consumption models using a unified notation 
+that allows a collective comparison of the energy consumption rates for the various drone types, payloads, speeds, etc.; (2) examine 
+how the distinguishing features of different drone energy consumption models contribute to differences in the calculated energy 
+consumption; (3) evaluate published results on energy consumption for small delivery drones from both the models and field tests; and 
+(4) compare the drone energy consumption models in a common setting for two prototypical drones to document how energy use and 
+range vary differentially as a function of speed and payload. We believe the results provide useful insights for modeling energy 
+consumption for current drones, as well as for future (not yet existing) drones. 
+The rest of the paper is organized as follows. Section 2 provides background and classification of drone energy consumption models 
+in the literature. Section 3 discusses key drone energy consumption models using a unified notation. Section 4 documents the dif -
+ferences in the energy consumption rates as reported in the literature as well as in a common setting. Section 5 discusses insights and 
+implications of the analyses, and Section 6 provides concluding remarks. 
+2. Background and features of drone energy consumption models 
+2.1. Background 
+Key factors affecting drone energy consumption can be classified into four categories: drone design, environment, drone dynamics, 
+and delivery operations. Major factors in these four categories are provided in Fig. 1 (adapted from Demir et al. (2014) for road 
+transport). Drone design factors include the weight and size of the drone body, the number and size of rotors, the weight, size and 
+energy capacity of the battery, power transfer efficiency, maximum speed and payload, lift-to-drag ratio, delivery mechanism and 
+avionics. Environmental factors include air density, gravitational force, wind conditions, weather (snow, rain, etc.), ambient tem -
+perature and operating regulations. Drone dynamics factors include drone travel speed, drone motion (i.e., takeoff/landing, hover, 
+Fig. 1. Factors affecting drone energy consumption.  
+J. Zhang et al.                                                                                                                                                                                                          
+
+--- PAGE 3 ---
+Transportation Research Part D 90 (2021) 102668
+3
+horizontal flight), acceleration/deceleration, angle of attack and flight altitude. We also include the possibility for drones to be carried 
+on other vehicles such as trucks or public transit, for a portion of their trip. Delivery operations factors include weight and size of the 
+payload, “ empty returns ” (i.e. the return trip after delivery is without the payload, which implies a successful delivery), fleet size and 
+mix, the number of deliveries per trip, the delivery mode, and the area of the service region. Some of these factors are determined or 
+limited by the drone design (e.g., maximum payload, projected area of the drone, etc.), others are operational factors that can vary for a 
+given drone design (e.g., payload, speed, etc.), and still others are external factors (e.g., weather). Further, many of these factors are 
+interdependent and dynamic during a drone delivery trip. 
+Uncertainty in estimating drone energy consumption can result from all of these factors, especially drone design, drone dynamics, 
+and delivery operations. Note that if drones are carried on other vehicles (e.g., trucks or public transit) they expend little or no energy, 
+and that different payload delivery modes (landing, lowering via tethers, parachuting) require different levels of energy use. When 
+drones are paired with other vehicles, or multiple drones are operating closely together (as for take-off and landing from the same site), 
+considerable coordination and synchronization may be required, which might lead to substantial hovering by the drone(s). 
+A drone uses energy to fly by generating thrust and lift forces to overcome the weight and drag forces. Fig. 2 highlights five key 
+interrelated aspects of drone energy consumption: payload weight, battery weight, drone (airframe) weight, airspeed, and range. The 
+airspeed, payload, drone and battery weight are important determinants of the drone energy consumption rate. The energy con -
+sumption rate in turn, along with the battery weight (and type), determines the range. Note that the payload, drone and battery weight 
+determine the total weight of the drone at takeoff, and involve both design decisions and operating decisions. Increasing the weight of 
+any component increases the energy consumption rate, ceteris paribus, as indicated by the “ ( + ) ” on the three arrows from the weights 
+to the energy consumption rate. Airspeed is an operating decision, and for drones (as well as airplanes and helicopters) the power 
+consumed is approximately a convex function of airspeed (due to the competing forces of induced drag, parasite drag, and profile drag 
+– see for example Rotaru and Todorov (2017) ). Thus, there is a “ ( + /-) ” on the arrow out of Airspeed. Range is determined by both the 
+drone design and operating decisions. Note that an increase in battery weight will increase the drone energy consumption rate, ceteris 
+paribus, which decreases the range; but the larger battery will also increase the available energy capacity, which increases the range 
+(see Stolaroff et al. (2018) for a discussion of how battery affects drone energy use and range). 
+2.2. Relevant literature and key drone energy models 
+Since the seminal work of Murray and Chu (2015) , many researchers have considered designing and optimizing drone delivery, 
+with drones launched from a depot and/or other vehicles (usually trucks). This research includes drone routing and scheduling (e.g., 
+Dorling et al., 2017; Agatz et al., 2018; Schermer et al., 2019; Liu, 2019; Murray and Raj, 2020; Kithacharoenchai et al., 2020 ), facility 
+location problems including charging stations ( Chauhan et al., 2019; Shavarani et al., 2018; Hong et al., 2018; Ferrandez et al., 2016 ), 
+and fleet sizing ( Troudi et al., 2018 ). For recent surveys of drone modeling which especially focus on combined truck-drone operations 
+where drones can be carried by trucks to extend their useful range (and in delivery settings where the trucks serve as resupply points for 
+drone deliveries), see Otto et al. (2018) and Chung et al. (2020) . Other work that allows drones to extend their useful delivery range by 
+riding on public transit includes Huang et al., 2020a, 2020b; Choudhury et al., 2019 . 
+Drone travel models generally impose time and/or distance limit constraints to reflect the drone ’ s limited battery capacity. Much of 
+the research assumes a constant rate of energy consumption per unit time or unit distance, so that drone energy consumption is 
+modeled as a linear function of time or distance traveled (e.g., Ferrandez et al., 2016 ; Ha et al., 2018 ; Huang et al., 2020a; Moore, 
+2019 ). However, there is considerable variance in the assumed consumption values; for example, Ferrandez et al. (2016) use a value of 
+46.1 J/m (based on a 2013 Amazon delivery drone carrying 5 lb packages at 70 km/hr), while Moore (2019) uses 223.7 J/m (based on 
+field tests with a DJI Matrice 600 Pro by the U.S. Department of Energy 2019, 2020 ). Rather than using a single fixed energy con -
+sumption rate, Goodchild and Toy (2018) consider energy consumption rates ranging from 22 to 223 J/m (10 – 100 Wh/mile) to assess 
+the sensitivity of the research findings to the energy efficiency of drones. Their results show how the emissions benefits of drones 
+relative to trucks strongly depend on the drone energy consumption rate; however, they do not suggest a particular energy con -
+sumption rate to use. 
+Some optimization models have incorporated drone energy consumption models explicitly, with a key differentiation being the 
+Fig. 2. Interrelated aspects of the energy consumption rate for drone delivery.  
+J. Zhang et al.                                                                                                                                                                                                          
+
+--- PAGE 4 ---
+Transportation Research Part D 90 (2021) 102668
+4
+assumption regarding thrust for steady horizontal flight. The model may assume that (i) the thrust force ( T ) equals the drag force ( D ), 
+and the weight force ( W ) equals the lift force ( L ) (therefore, T = W / r , where r = L / D is the lift-to-drag ratio), (ii) the thrust force equals 
+the weight force, as for a hovering helicopter, or (iii) the thrust force equals the sum of the weight, the drag and the lift forces. These 
+different assumptions reflect different perspectives on the drone operations, e.g., whether they operate more like fixed-wing aircraft or 
+helicopters. These three approaches give rise to three continuing streams of literature for drone energy modeling. Key references are 
+described briefly in this section, with details in Section 3 . 
+D ’ Andrea (2014) provides a seminal contribution in modeling drone energy consumption by translating the fundamental flight 
+principles of manned aircraft to a model for the much smaller scale of unmanned aerial drones. This article presents a model using an 
+integrated approach that combines aerodynamic and drone design aspects into a single critical parameter: the lift-to-drag ratio r . The 
+energy model also includes a fixed component for avionics power. Troudi et al. (2018) uses the same model to analyze drone fleet size, 
+though they ignore the avionics power. Figliozzi (2017) adopts the same modeling approach to derive drone emissions based on a 
+continuous approximation travel distance model. The D ’ Andrea integrated model is also used in a series of reports from the RAND 
+Corporation that explore energy consumption for city-scale drone delivery systems ( Lohn, 2017; Xu, 2017; Gulden, 2017 ). Lohn (2017) 
+uses this model to analyze truck and drone delivery in cities of various sizes, and Gulden (2017) provides a GIS-based analysis of 
+shifting truck deliveries to drones in Minneapolis. Xu (2017) discusses vehicle design aspects related to drone energy consumption and 
+suggests that fixed-wing VTOL (vertical takeoff and landing) or hybrid multicopter configurations that combine VTOL capabilities with 
+lifting surfaces (wing-like structures) are a better fit for many drone delivery operations. Several such drones have been tested, 
+including the latest delivery drone designs of Amazon, Google, and others ( Lee, 2019 ; 
+Heath, 2018; Adams, 2016 ; Swoop Aero, 2019 ). 
+A second approach for modeling drone energy consumption is a component model based on helicopter operations, with the 
+assumption that the power consumed during level flight, takeoff, or landing is approximately equivalent to the power consumed while 
+hovering. This model ignores the impact of drone speed on energy consumption. Dorling et al. (2017) provides an equation for the 
+power consumed by a multirotor helicopter in hover as a function of the battery and payload weight. These authors also report field 
+experiments and develop regression parameters with small payloads (see Section 3.3 ). Jeong et al. (2019) adapts Dorling ’ s hovering 
+model for a MikroKopter MK8-3500 drone, and also describe a regression model based on payload mass. They state the “ proposed 
+energy consumption model provides realistic values that are analogous to the experiment result ” ; however, they do not provide any 
+parameter values for the model. 
+A more detailed component modeling approach is comprised of component models based on the fundamental forces of flight, 
+including the weight force of the aircraft (due to gravity) and drag forces. The two main drag forces acting on aircraft are parasite drag 
+from the aircraft moving through the atmosphere and induced drag from redirecting the airflow to create the lift that keeps the aircraft 
+aloft. Component models for drone energy consumption include separate models for the individual forces and the different components 
+of a drone trip (takeoff, landing, cruising, hovering), and are often quite detailed to capture particular features of the drone design. 
+Stolaroff et al. (2018) develops a two-component model based on the thrust required to balance the drone weight and the parasite drag 
+force. This model is used to assess the energy use and life cycle greenhouse gas (GHG) emissions for small drones with short ranges (4 
+km) delivering from warehouses. Results indicate that small drones are likely to provide lower lifecycle GHG emissions than con -
+ventional delivery trucks, but that benefits depend on the carbon intensity of electricity and the size of the drones. 
+Liu et al. (2017) provide a detailed three component drone energy model that includes power to maintain lift and overcome 
+parasite drag, along with profile power to overcome the rotational drag of the propeller blades. Field tests in Liu et al. (2017) show that 
+ascending takes 9.8% more power than hovering, and descending takes 8.5% less power than hovering (similar to results in Di Franco 
+and Buttazzo (2015) ). Kirchstein (2020) uses a similar component model, but in an idealized delivery process from a depot with 
+separate energy calculations for takeoff and ascent, steady level flight, descent, hovering, and landing for delivery. The return trip is 
+similar but without the payload. Kirchstein (2020) compares delivery with trucks versus drones for Berlin and shows that drone 
+delivery often requires more energy. The results also highlight how wind and drone hovering increase energy consumption. Several 
+other authors have developed component drone power and energy models similar to those above for problems involving drones in 
+wireless communication networks (e.g., Zeng and Zhang, 2017; Zeng, 2019; Wu, 2019 ). 
+A third approach to modeling drone energy consumption is with regression based on field experiments, as in some articles pre -
+viously mentioned. Tseng et al. (2017a, 2017b) present a nine-term nonlinear regression model for drone power consumption that 
+includes horizontal and vertical speed and acceleration, as well as payload mass and wind speed. 
+Lastly, an alternative approach to estimate drone energy consumption is to use information provided by the manufacturer, where 
+the energy consumption rate (in Joules/meter) is calculated as 
+BatteryEnergy ( inJ )
+Flightdistance ( inm )
+. Information on battery energy is usually, but not always, 
+provided by the manufacturer (e.g., in Watt-hours or as a capacity and voltage). However, flight distance information is not reported by 
+all manufacturers, nor is it provided in a consistent manner. Further, flight distance data, when available from manufacturer websites, 
+may be the distance traveled under conditions that maximize that distance (e.g., at the speed, altitude and weather conditions that 
+maximize distance) which may not reflect real-world drone operations. While one can calculate a flight distance as the product of 
+speed and flight time using reported data for a flight time (or hovering time) and drone speed, we note that manufacturers often report 
+maximum values (e.g., “ Max Flight Time ” and “ Max Speed ” ) or unspecified values, and that drone energy use depends strongly on 
+speed. Thus, estimates of flight distances and energy consumption are likely to be inaccurate when based on flight times and speeds 
+reported by manufacturers that are either maximum values or from unknown operating conditions. Ideally, there would be standard 
+energy efficiency data provided by manufacturers from an independent or governmental source (e.g., as with energy efficiency 
+measures for automobiles or appliances). See Appendix A for further discussion of estimating Epm based on manufacturer data when 
+J. Zhang et al.                                                                                                                                                                                                          
+
+--- PAGE 5 ---
+Transportation Research Part D 90 (2021) 102668
+5
+flight distance information is provided. 
+Murray and Raj (2020) design truck-drone tandem delivery routes with a three-phase heuristic and is the only reference to consider 
+multiple drone energy models, including the model of Liu et al. (2017) , a simple regression model that is linear in payload, and other 
+models with a fixed distance or time limit (essentially modeling energy consumption as a linear function of drone travel distance or 
+time). Relevant findings for our study were that (i) the different energy models can produce very different routes, with several energy 
+models leading to the creation of energy infeasible drone routes, and (ii) it is important to include the energy consumed outside the 
+steady level flight portion of a delivery trip (e.g., for launch, retrieval and delivery), especially for any hovering needed for coordi -
+nation with a truck or other drones prior to landing. 
+Table 1 provides a categorization of 12 key drone energy consumption models in the literature. Column 1 identifies the reference 
+for the model. Columns 2 – 4 identify the assumption regarding thrust for steady horizontal flight and show the three groupings of 
+models as discussed earlier. Columns 5 – 7 reflect the scope of drone travel included in the model for the different drone flight segments 
+(horizontal flight, hover, and vertical flight including takeoff/landing). Note that all 12 models for drone delivery include energy use 
+for horizontal travel, but only half include energy use for hovering and vertical travel. Columns 8 – 10 indicate adjustments to the 
+modeled energy consumption for wind, avionics, and empty returns. Note that only 2 models do not include at least one of the three 
+adjustments in columns 8 – 10, although these adjustments are often removed from the models in the reported computational results. 
+Columns 11 – 12 indicate the type of model provided (either theoretical based on modeling thrust as in columns 2 – 4, or regression 
+models) and show that 10 articles provide theoretical models, while 3 papers present regression models. Column 13 indicates the five 
+references that include field tests with a drone, often used for setting parameter values in the model. 
+3. Theoretical models for energy consumption 
+In this section, we discuss the theoretical and regression models for energy consumption of each of the 12 articles in Table 1 . We 
+first introduce in sub-section 3.1 a unified notation to facilitate comparison of all models. We then discuss in sub-section 3.2 the models 
+that use an integrated approach (with the lift-to-drag ratio), followed in sub-section 3.3 by the models that use a more complex 
+component approach. For consistency we report all energy values in Joules (1 Joule = 1 Watt-second) and energy consumption rate for 
+steady level flight ( Epm ) in Joules/meter. 
+Table 1 
+Summary of key features of the theoretical and regression models of drone energy consumption in the literature.  
+Reference Thrust Assumption for 
+Flight 
+Travel Components Wind Avionics Empty 
+return 
+Theoretical 
+Model 
+Regression 
+Model 
+Field 
+Tests 
+i 
+T =
+W/r 
+ii 
+T 
+=
+W 
+iii 
+T = W 
++ D +
+L 
+Horizontal Hover Vertical 
+D ’ Andrea 
+(2014) 
+x   x   x x  x   
+Figliozzi 
+(2017) 
+x   x     x x   
+Dorling et al. 
+(2017)  
+x  x x x    x x x 
+Tseng et al. 
+(2017a)    
+x x x x x   x x 
+Tseng et al. 
+(2017b)    
+x x x x x   x x 
+Liu et al. 
+(2017)   
+x x x x x   x  x 
+Lohn (2017) x   x x x x x x x   
+Xu (2017) x   x x x x x x x   
+Stolaroff et al. 
+(2018)   
+x x   x  x x  x 
+Troudi et al. 
+(2018) 
+x   x    x  x   
+Jeong et al. 
+(2019)  
+x  x      x x  
+Kirchstein 
+(2020)   
+x x x x x x x x   
+Notes for energy consumption adjustments: Including avionics increases energy consumption, while modeling empty returns decreases energy 
+consumption (the return trip has lower weight). Wind is often modeled as increasing drone energy consumption (e.g., D ’ Andrea (2014) ), though more 
+detailed analyses show the energy use may increase or decrease depending on wind speed and direction and drone type (e.g., headwinds may increase 
+lift, thereby reducing the power requirements; see Kirchstein (2020) for a detailed analysis of wind effects). 
+J. Zhang et al.                                                                                                                                                                                                          
+
+--- PAGE 6 ---
+Transportation Research Part D 90 (2021) 102668
+6
+3.1. Unified notation 
+Different authors use different notation for the same concepts, so to facilitate understanding and comparison of the models, we 
+employ the unified notation shown in Table 2 (m = meter; s = seconds; J = joules). We classify the drone physical components into 
+three categories: (i) drone body (including the airframe, propellers, motors, sensors, GPS, avionics, and a camera if used), (ii) drone 
+battery, and (iii) payload (package). Thus, the drone body includes everything except the battery and package. Two areas that 
+sometimes cause confusion in the literature concern the range and the battery usage. We use R to denote the maximum distance that a 
+drone can travel in one direction and still be able to return to the depot, i.e., half of the round-trip distance for an out-and-back de -
+livery. We define η as the power transfer efficiency, which is the energy loss from battery to the propeller. Figliozzi (2017) uses an 
+overall power transfer efficiency, which also includes the energy loss from charging to battery, to denote power transfer efficiency. This 
+definition will result in a value a little smaller than η , as charging is not 100% efficient. 
+3.2. Energy models using integrated approaches 
+The seminal integrated model is provided by D ’ Andrea (2014) and is based on the ratio of lift-to-drag, r . This is a simple formula for 
+calculating the power consumption (in kJ/s) required for the drone to maintain steady flight and operate on-board electronics in terms 
+of the drone total mass, its speed, the lift-to-drag ratio, and the battery ’ s power transfer efficiency. The derivation of this model is given 
+in Appendix B. With no wind, D ’ Andrea (2014) provides the expression 
+P =
+∑
+3
+k = 1
+m
+k
+v
+370 r η
++ P
+avio
+(1) 
+where the constant 370 (370 = 3600/9.8) allows velocities to be expressed in km/h rather than meters per second. In this paper, we 
+express all speeds in m/s, so the equivalent expression is 
+P =
+  ∑
+3
+k = 1
+m
+k
+)
+gv
+a
+r η
++ P
+avio
+(2) 
+The energy consumed for steady flight over a distance d is the power multiplied by the travel time d / v , so the energy per meter of 
+travel ( Epm ) is the power divided by the speed 
+Table 2 
+Unified notation for drone energy models.  
+ρ = air density [kg/m
+3
+] (e.g., 1.225 kg/m
+3 
+at 15
+◦
+C at sea level)  
+g = acceleration of gravity [m/s
+2
+]  
+v
+i
+= induced speed [m/s] (the change in the speed of the air after it flows through an object)  
+v
+a
+= airspeed [m/s] (speed of drone relative to the air)  
+φ = ratio of headwind to airspeed [unitless]  
+v = drone ground speed [m/s], so v = ( 1   φ ) v
+a  
+d = drone one-way travel distance for a single delivery trip [m]  
+r = lift-to-drag ratio [unitless]  
+η = battery and motor power transfer efficiency (from battery to propeller) [unitless]  
+η
+c
+= battery charging efficiency [unitless]  
+k = index of the drone components: drone body = 1; drone battery = 2; payload (package) = 3  
+C
+D k
+= drag coefficient of drone component k [unitless]  
+A
+k
+= projected area of drone component k [m
+2
+]  
+m
+k
+= mass of drone component k [kg]  
+γ = maximum depth of discharge of the battery [unitless]  
+s
+batt
+= specific energy of the battery (energy capacity per kg) [J/kg]  
+f = safety factor to reserve energy in the battery for unusual conditions [unitless]  
+R = maximum one-way distance of drone travel per battery charge [m]  
+P = power required to maintain a steady drone flight [Watt = J/s]  
+P
+avio
+= power required for all avionics on the drone (independent of drone motion) [Watt = J/s]  
+n = number of rotors for a rotocopter drone [rotors]  
+N = number of blades in one rotor for a rotocopter drone [blades]  
+c = blade chord length [m]  
+c
+d
+= blade drag coefficient [unitless]  
+ς = area of the spinning blade disc of one rotor [m
+2
+]  
+α = drone angle of attack [radians]  
+Epm = energy required for steady drone flight per unit distance [J/m]   
+J. Zhang et al.                                                                                                                                                                                                          
+
+--- PAGE 7 ---
+Transportation Research Part D 90 (2021) 102668
+7
+Epm =
+P
+v
+a
+(3) 
+So, for D ’ Andrea (2014) including possible headwinds as indicated via the unitless factor φ =
+headwindspeed
+droneairspeed
+, we have 
+Epm =
+1
+1   φ
+(
+g
+∑
+3
+k = 1
+m
+k
+r η
++
+P
+avio
+v
+a
+)
+(4) 
+One example in D ’ Andrea (2014) with no headwind ( φ = 0), uses m
+1
+= m
+2
+= m
+3
+= 2 kg, v
+a
+= 12 . 5 m/s (45 km/hr), r = 3 , η = 0 . 5 
+and P
+avio
+= 100 J/s. This requires total power of P = 590 J/s, or Epm = 47 . 2 J/m. With an 8.33 m/s headwind, the Epm triples to 141 . 6 
+J/m. Troudi (2018) uses the same model as described in eq. (2) with a MD4-1000 drone with a battery of 1,040,400 Joules (or 289Wh), 
+m
+3
+= 1 . 2 kg, m
+1
++ m
+2
++ m
+3
+= 5 . 55 kg, and v
+a
+= 13 m/s. 
+Figliozzi (2017) extends the basic model from D ’ Andrea (2014) for “ steady flight ” to consider empty returns. This model does not 
+include power for avionics ( P
+avio
+= 0 ) , models the lift-to-drag ratio as dependent on speed (with r ( v ) ), and provides a unitless parameter 
+for battery recharging efficiency ( η
+r
+). The overall energy consumption rate per unit distance (with no headwind) is given as 
+Epm =
+1
+2
+(
+g
+∑
+3
+k = 1
+m
+k
+r ( v ) ηη
+r
++
+g
+∑
+2
+k = 1
+m
+k
+r ( v ) ηη
+r
+)
+(5) 
+The first term in parentheses is the energy consumption rate with a package, and the second term is the energy consumption rate 
+without a package on the return trip. 
+The parameters used by Figliozzi (2017) are for a MicroDrones MD4-3000 and are as follows: m
+1
++ m
+2
+= 10 . 1 kg, m
+3
+= 5 kg, and the 
+drone has a range of 36 km, though the paper suggests 70% of this, or 25 km, as the maximum range to provide a safety margin and 
+allow for “ unknown factors that can increase energy consumption such as headwinds ” . The lift-to-drag ratio r ( v ) is not specified; 
+however the article reports an Epm value of 77.8 J/m “ calculated utilizing manufacturer information ” and an overall power efficiency 
+product of ηη
+r
+= 0 . 9*0 . 73 = 0 . 66. From these values, the lift-to-drag ratio can be calculated in reverse as r = 2 . 4. This article uses a 
+battery of 2.8 million Joules (or 777Wh). 
+The energy model used in the RAND Corporation studies ( Lohn, 2017; Xu, 2017; Gulden, 2017 ) is based on D ’ Andrea (2014) and 
+described in Lohn (2017) . Lohn (2017) reports that for truck and drone delivery serving a city the size of Los Angeles (1500 km
+2
+) from a 
+centrally located drone depot, the average energy use rate is Epm = 112.5 J/m (assuming uniformly distributed deliveries in a circular 
+city). Xu (2017) models a complete drone delivery mission includes ascending to 150 m of altitude, flying level at 22.2 m/s (80 km/hr) 
+into a 2.8 m/s (10 km/hr) headwind and then descending to the delivery site, with 30 s of hovering. The return trip is similar but 
+without the payload and also includes flying into a 2.8 m/s (or 10 km/hr) headwind. Results are provided for a baseline multicopter 
+design based on an Amazon Prime Air VTOL drone with 8 lift rotors and 2 cruise motors and the lift-to-drag ratio r = 3. For this 
+baseline hybrid drone (weighing 55 lbs with a 20 mile range), Xu (2017) provides an energy consumption of 5.4 MJ for a 2.3 kg 
+payload flying 32.2 km, resulting in Epm = 168 . 0 J/m. 
+3.3. Energy models using component approaches 
+Dorling et al. (2017) provides a model for drone energy consumption based on hovering only (with the assumption that this is 
+approximately equal to the energy for drone travel). During hover, the airspeed is zero, and the thrust balances the weight force, so 
+T = g
+∑
+3
+k = 1
+m
+k
+(6) 
+Based on helicopter theory (e.g., Leishman (2002) ), the power required for the drone to hover is 
+P =
+T
+3 / 2
+̅̅̅̅̅̅̅̅̅ ̅
+2 n ρς
+√ =
+ 
+g
+∑
+3
+k = 1
+m
+k
+)
+3 / 2
+̅̅̅̅̅̅̅̅̅ ̅
+2 n ρς
+√ (7) 
+where n is the number of rotors, and ς is the area of the spinning blade disc of one rotor. 
+The Epm can then be calculated as 
+Epm = P / v
+a
+=
+ 
+g
+∑
+3
+k = 1
+m
+k
+)
+3 / 2
+v
+a
+̅̅̅̅̅̅̅̅̅ ̅
+2 n ρς
+√ (8) 
+This does not include power for avionics or an adjustment for wind or power transfer efficiency η . 
+Field tests conducted with the Hexa-B drone with no payload showed that hovering consumed 2.3% more power than steady flight 
+at 6 m/s, and 4.7% more power than repeated altitude changes (vertical flight) from 0 to 25 m. Field test data while hovering with 
+small payloads of 0.5 – 1.5 kg provided very different, and much larger power consumption levels than the theoretical model of eq. (7) 
+(4.5 to 5 times larger!). 
+The authors also approximate the hover power consumption as a linear function of the 
+battery and payload weight for an ArduCopter Hexa-B drone with n = 6, ς = 0 . 2 m
+2
+, and a frame weight m
+1
+= 1 . 5 kg as 
+J. Zhang et al.                                                                                                                                                                                                          
+
+--- PAGE 8 ---
+Transportation Research Part D 90 (2021) 102668
+8
+P = β
+1
+( m
+2
++ m
+3
+) + β
+0
+(9) 
+where β
+1 
+is the power consumed per kilogram of battery and package weight, and β
+0 
+is the power required to keep the drone frame 
+of mass m
+1 
+in the air. Values of β
+1
+= 46 . 7 J/s-kg and β
+0
+= 26 . 9 J/s were generated from eq. (7) using linear regression with m
+2
++ m
+3 
+ranging from 0 to 3 kg in increments of 0.001 kg. Regression parameters for eq. (9) based on the field tests with small payloads provide 
+much larger values of β
+1 
+and β
+0
+, to provide 
+Epm = P / v
+a
+= ( 217 ( m
+2
++ m
+3
+) + 185 ) / v
+a
+(10)  
+Epm = P / v
+a
+= ( 171 ( m
+2
++ m
+3
+) + 187 ) / v
+a
+(11) 
+for a large 14.8 V battery and a small 11.1 V battery, respectively. 
+Stolaroff et al. (2018) provide a component model based on the fundamental forces of flight (including forces of the weight, the 
+parasite and induced drags) and also conduct field testing. For a hovering rotocopter, the same power model is provided as in eq. (7) . 
+But for forward flight, Stolaroff et al. (2018) present a model for thrust 
+T = W + D = g
+∑
+3
+k = 1
+m
+k
++
+1
+2
+ρ
+∑
+3
+k = 1
+C
+D
+k
+A
+k
+v
+a
+2
+(12) 
+where the first term reflects the total drone weight and the second term is the parasite drag force, which depends on the drag 
+coefficient C
+D
+k 
+and the projected area perpendicular to travel A
+k 
+of each drone component (airframe, battery and payload). Note that 
+when the drone hovers, the airspeed equals zero ( v
+a
+= 0) and so T =
+∑
+3
+k = 1
+m
+k
+g , as in eq. (7) . 
+With forward flight, or heavy wind, Stolaroff et al. (2018) use a power consumption formula adapted from Hoffmann et al. (2007) 
+P =
+T ( v
+a
+sin α + v
+i
+)
+η
+(13) 
+where α is the angle of attack (i.e., the angle of the airspeed to the drone rotor) and v
+i 
+is the induced speed, which can be found by 
+solving (numerically) 
+v
+i
+=
+g
+∑
+3
+k = 1
+m
+k
+2 n ρς
+̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅ ̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅ ̅̅̅̅̅̅̅̅̅ ̅
+( v
+a
+cos α )
+2
++ ( v
+a
+sin α + v
+i
+)
+2
+√ (14) 
+The angle of attack α is given by 
+α = tan
+  1
+⎛
+⎜
+⎜
+⎜
+⎜
+⎝
+1
+2
+ρ
+  ∑
+3
+k = 1
+C
+D
+k
+A
+k
+)
+v
+a
+2
+g
+∑
+3
+k = 1
+m
+k
+⎞
+⎟
+⎟
+⎟
+⎟
+⎠
+(15) 
+For large values of α the drone may become unstable, so in practice α may be limited to maintain stable flight ( Ai, 2019; DJI 
+website, 2020 ). The overall energy per meter is then given as 
+Epm =
+T ( v
+a
+sin α + v
+i
+)
+v
+a
+η
+(16) 
+with α from eq. (15) and v
+i 
+being the solution of eq. (14) . Empty returns are assumed. 
+Stolaroff et al. (2018) consider a small quadcopter of total mass 2.57 kg, including a 0.5 kg payload (3D Robotics ’ Iris), and a larger 
+octocopter of total mass 24 kg, including a 7 kg payload (Turbo Ace ’ s Infinity 9). Field measurements consisting of 1073 flight seg -
+ments with the small quadcopter in moderate winds (up to 7 m/s at random orientation to the direction of travel) are used to set some 
+parameter values, including the power transfer efficiency η = 0 . 7. See Stolaroff et al. (2018) for details and all parameter values. 
+Stolaroff et al. (2018) also model the maximum range of a drone assuming that the drone carries the payload in one direction only 
+(i.e., m
+3
+= 0 on the return trip). This is expressed as a function of the battery mass ( m
+2
+), battery energy capacity per kg ( s
+batt
+), the depth 
+of battery discharge ( γ ), a battery safety factor f (assumed to be 1.2), and the energy consumption rate carrying the payload Epm
+loaded 
+and on the empty return Epm
+unloaded 
+R =
+m
+2
+s
+batt
+γ
+( Epm
+loaded
++ Epm
+unloaded
+) f
+(17) 
+Liu et al. (2017) provide a more comprehensive and detailed energy consumption model for small quadrotor UAVs. The model has 
+three components: (i) induced power to maintain lift, which is a function of the thrust and the vertical drone speed, (ii) parasite power 
+as in Stolaroff et al. (2018) , and (iii) profile power to overcome the rotational drag encountered by propeller blades, which is a function 
+of the thrust and the airspeed (see Rotaru and Todorov (2017) for related details on power requirements for helicopters). 
+The parasitic power is the same as in Stolaroff et al. (2018) and is given by 
+∑
+3
+k = 1
+1
+2
+ρ v
+a
+3
+C
+D
+k
+A
+k
+, although the authors do not explicitly 
+consider the drag forces for the battery and the payload. The other two power components depend on the thrust, which is given by 
+J. Zhang et al.                                                                                                                                                                                                          
+
+--- PAGE 9 ---
+Transportation Research Part D 90 (2021) 102668
+9
+T =
+̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅ ̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅ ̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅ ̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅ ̅̅̅̅̅̅̅̅̅̅̅ ̅
+(
+g
+∑
+3
+k = 1
+m
+k
+  c
+5
+( v
+a
+cos α )
+2
+)
+2
++
+(
+1
+2
+ρ
+(
+∑
+3
+k = 1
+C
+D
+k
+A
+k
+)
+v
+a
+2
+)
+2
+√
+√
+√
+√
+(18) 
+where the term g
+∑
+3
+k = 1
+m
+k 
+is the weight to be lifted, the term c
+5
+( v
+a
+cos α )
+2 
+reflects the lift generated from horizontal movements (likely 
+to be especially important for hybrid drones with lifting surfaces), and the last term is again the parasitic drag. For a drone in steady 
+level flight, the Epm , based on the total power from equation (14) in Liu et al. (2017) , is 
+Epm =
+κ
+1
+̅̅̅̅̅̅̅̅̅ ̅
+2 n ρς
+√
+T
+3 / 2
+v
+a
++
+1
+2
+ρ
+(
+∑
+3
+k = 1
+C
+D
+k
+A
+k
+)
+v
+a
+2
++ c
+2
+T
+3 / 2
+v
+a
+(19) 
+where the first term reflects the induced power, the second term reflects the parasitic power and the last term reflects the profile 
+power, with parameter c
+2 
+depending on the air density and details of the rotors (including the efficiency of converting rotor angular 
+speed to thrust, the number of blades in each propeller, the blade chord width, drag coefficient, and length). Based on field testing, Liu 
+et al. (2017) report that with a 1.43-kg 3DR IRIS + quadcopter, κ
+1
+= 0 . 8554 and c
+2
+= 0 . 3177 (m/kg)
+1/2
+. Note that including the profile 
+power in the component model requires detailed decisions on the drone rotors and motors (for calculating c
+2
+). 
+Liu et al. (2017) include some field tests, with the most involved having the drone with no payload ascend to 70 m, fly a horizontal 
+rectangular loop for about 730 m, then descend and land back at the origin. Comparing the measured power and the estimated power 
+from the proposed models shows that the model underestimated the energy consumed in ascending by 10.7%, underestimated the 
+energy consumed in horizontal flight by 16.3%, and overestimated the energy consumed in descending by 2.2%. For the total flight, 
+the model underpredicted the energy by 11.4%. Because the experiment was for a short flight, ascending and descending consumed 
+39% of the total energy; in contrast to a 10 km horizontal trip, ascent and descent would consume only 4.5% of the total energy. For the 
+rectangular loop trip, i.e., the entire horizontal flights (of length 730 m), the modeled energy consumption is 1.23x10
+4 
+J which equates 
+to about Epm = 17 . 3 J/m. 
+Kirchstein (2020) provides a component model originally from Langelaan et al. (2017) based on an idealized delivery process (like 
+Xu (2017) ) with takeoff and ascent at 45
+◦
+to a cruising altitude (150 m), level flight, descent (at 45
+◦
+) with hovering, then landing for 
+delivery. The return is similar but without the payload. Like Liu et al. (2017) the model includes energy consumed for induced power, 
+parasite power, and profile power; but the model also includes power for climbing and avionics, and adjustments for power losses due 
+to the electric motor, transmission and charging efficiencies. For steady flight, Kirchstein (2020) uses a thrust of 
+T =
+̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅ ̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅ ̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅ ̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅ ̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅ ̅̅̅̅̅̅̅̅̅̅̅̅̅ ̅
+(
+g
+∑
+3
+k = 1
+m
+k
+)
+2
++
+(
+1
+2
+ρ
+(
+∑
+3
+k = 1
+C
+D
+k
+A
+k
+)
+v
+a
+2
+)
+2
++ ρ
+(
+∑
+3
+k = 1
+C
+D
+k
+A
+k
+)
+v
+a
+2
+mg sin θ
+√
+√
+√
+√
+(20) 
+where the flight angle θ allows ascending and descending to be modeled. For hovering (i.e., v
+a
+= 0), the thrust reduces to g
+∑
+3
+k = 1
+m
+k
+. 
+Kirschstein ’ s general energy model is detailed in Appendix C and the Epm for steady level flight (i.e., θ = 0) with no wind can be 
+written as 
+Epm =
+1
+η
+⎛
+⎝
+κ Tw
+v
+a
++
+1
+2
+ρ
+(
+∑
+3
+k = 1
+C
+D
+k
+A
+k
+)
+v
+a
+2
++
+κ
+2
+ 
+g
+∑
+3
+k = 1
+m
+k
+)
+1 . 5
+v
+a
++ κ
+3
+(
+g
+∑
+3
+k = 1
+m
+k
+)
+0 . 5
+v
+a
+⎞
+⎠
++
+P
+avio
+η
+c
+v
+a
+(21) 
+The first term in the Epm is for induced power with κ being the “ lifting power markup ” and w the “ downwash coefficient ” (See 
+Kirchstein (2020) for details). The second term in the Epm is for parasite drag (as in Liu et al. (2017) and Stolaroff et al. (2018) ). The 
+third and fourth terms are for profile power where constants κ
+2 
+and κ
+3 
+reflect details of the rotors and environment (as in Liu et al. 
+(2017) ). The last term in the Epm is for avionics. 
+Kirchstein (2020) provides analyses for delivery in an urban region (comparing drones with diesel and electric trucks) with large 
+octocopter drones ( m
+1 
++ m
+2
+= 12 kg) that carry a 2.5 kg payload ( m
+3
+= 2.5 kg), travel at 22.2 m/s, have a flight radius of 9 km (and the 
+trips include 5 min of hovering), power transfer efficiency η = 0 . 73, battery charging efficiency η
+c
+= 0 . 9 and P
+avio
+= 100 J/s (as in 
+D ’ Andrea (2014) ). For this drone, the constants in eq. (20) are: κ = 1 . 15, κ
+2
+= 0.502 and κ
+3
+= 0 . 118; and the loaded Epm = 131 . 5 J/m. 
+Tseng et al. (2017a, 2017b) present a nine-term nonlinear regression model for drone power use that includes horizontal and 
+vertical speeds and acceleration, as well as payload mass and wind speed, and provide a good fit to the reported field data. The 
+regression model for steady flight with no wind reduces to P = β
+1
+v
+a
++ β
+7
+m
+2
++ β
+9
+. They collected data to estimate the parameters based 
+on test drone flights using a 3DR Solo drone (weighing 2 kg) with small payloads of 0 kg, 0.25 kg, and 0.5 kg, and a DJI Matrice 100 
+drone (weighing 2.8 kg) with small payloads of 0 kg, 0.3 kg, and 0.6 kg. The regression equation for Epm in Tseng et al. (2017b) and 
+Tseng (2020) for steady flight with speeds up to 5 m/s and no wind for the larger DJI Matrice 100 drone is 
+Epm =
+P
+v
+a
+=   1 . 526 +
+0 . 220 m
+2
++ 433 . 9
+v
+a
+(22) 
+and for the smaller 3DR Solo drone it is 
+Epm =   2 . 595 +
+0 . 197 m
+2
++ 251 . 7
+v
+a
+(23) 
+J. Zhang et al.                                                                                                                                                                                                          
+
+--- PAGE 10 ---
+Transportation Research Part D 90 (2021) 102668
+10
+4. Analysis and results 
+In this section, we compare results for the key drone energy models described in Section 3 to explore the interrelated aspects of 
+payload mass, speed, energy consumption per meter and maximum drone range. The energy use and drone range are outputs 
+determined by (i) specifics of the drone and the battery modeled, (ii) operations, specifically speed and payload mass, and (iii) energy 
+adjustments, such as, wind, avionics, and energy loss. 
+Table 3a summarizes the 11 baseline drone energy models examined in Section 3 , arranged in order of increasing drone weight. 
+Columns 1 – 2 provide an identifying color and ID used in later figures. The first part of the ID (1 or 2 characters) indicates the reference 
+and model, where DH and DR respectively indicate the theoretical hovering and the regression models in Dorling et al. (2017) , and T1 
+and T2 indicate the two regression models from Tseng et al. (2017b) . The second part of the ID is the number of rotors for the drone or 
+the drone type. The third part of the ID indicates the drone weight based on the Table 4 classification of Hassanalian and Abdelkefi 
+(2017), with “ Mi ” for micro drones ( ≤ 5 kg) and “ L ” for light drones (5 – 50 kg). Note that the majority of the baseline models are for 
+small micro rotocopter drones with small payloads. Column 3 identifies the reference. Column 4 describes the model type (integrated, 
+component or regression) as discussed in Section 3 . Columns 5 – 7 provide information on the drone type, mass and airspeed for the 
+baseline setting in the reference. Column 8 is the equation number in this paper for Epm . Column 9 indicates if parameter values used in 
+the equation were based on field experiments. 
+Table 3b provides further information with Columns 1 – 2 showing the ID and reference. Column 3 indicates the Epm value, with 
+ranges shown for the regression models. Columns 4 – 7 provide the takeoff weight, drone body weight, battery weight, and payload. 
+Columns 8 – 9 provide the battery energy (in KJ) and the battery energy density (battery energy/battery weight). 
+4.1. Epm Results from the literature 
+Fig. 3 shows a graph of Epm versus payload mass for the models in Tables 3a and 3b using the parameter values and operational 
+setting in the reference. There are three short lines for the regression models (DR-6-Mi, T1-4-Mi, T2-4-Mi), and one point each for the 
+other eight models. We emphasize that these data are for the specific drone and the operational setting considered in each reference (i. 
+e., the drone size, payload and speed shown in Table 3a ) in steady level flight with no wind or avionics, with the exception of Xu (2017) 
+which includes a complete flight profile (ascent, level flight, hovering and descent on the forward and return trip). Xu (2017) does not 
+provide a model that allows the steady level flight portion of the trip to be extracted (although the steady level flight for the baseline 
+model in Xu (2017) would be 98.8 J/m if steady level flight accounted for the same percentage of the total energy as in Kirchstein 
+(2020) , which uses a similar trip profile). 
+Fig. 3 documents the wide range of energy consumption values per unit of distance reported in the literature for similar delivery 
+missions, with payloads that range from 0 to 7 kg. As expected, the general trend is evident that larger (heavier) drones and payloads 
+have larger Epm values; however, the range of Epm values varies substantially, both across the payloads and for similar payloads. The 
+models for micro drones with payloads ≤ 1 kg (and airspeeds ≤ 6 m/s) cluster in the lower left of Fig. 3 with Epm values ranging from 
+15.7 J/m to 107.3 J/m. The Epm for drones with slightly greater payloads of 1.15 – 2.5 kg (and airspeeds of 12 – 23 m/s) range from 39.2 
+J/m to 168.0 J/m, though as noted above X-H-L includes a complete delivery profile. Also note that Fig. 3 shows the average payload 
+for the three models with empty returns, X-H-L, K-8-L and F-4-L, where the outbound payload is 2.3, 2.0 and 5 kg, respectively. The S-8- 
+L model for the drone with the largest payload (7 kg) provides by far the largest Epm of 436.7 J/m, which is more than 5 times larger 
+than the energy use for the drone with the next largest payload (the F-4-L model with an outbound 5 kg payload). While Fig. 3 displays 
+Epm values from the models or field tests for the baseline settings described in the corresponding articles, these models could be used 
+for other delivery settings, such as delivering lighter payloads. For example, using the Stolaroff et al. (2018) heavy drone S-8-L model 
+with a small 2 kg payload would reduce the Epm to 321.8 J/m, which is still well above the values reported for the other models with 
+similar payloads. 
+Key findings revealed by Fig. 3 are: (i) the energy consumption rates reported in the literature for steady level flight vary 
+Table 3a 
+Key drone energy models.  
+Color ID Reference Model Type
+1 
+Drone Type (index) m
+1
++ m
+2 
+(kg)  Airspeed v
+a 
+(m/s)  Equation for Epm  Field tests 
+Blue L-4-Mi Liu et al. (2017) C Quadcopter (4) 1.46 8 – 23 (18 – 19) X 
+Blue S-4-Mi Stolaroff et al. (2018) C Quadcopter (4) 2.07 10 (12 – 16) X 
+Blue DH-6-Mi Dorling et al. (2017) C Hexacopter (6) 2 6
+2 
+(8)  
+Blue DR-6-Mi Dorling et al. (2017) R Hexacopter (6) 2 6 (10) X 
+Blue T1-4-Mi Tseng et al. (2017b) R Quadcopter (4) 2 0 – 5 (22) X 
+Blue T2-4-Mi Tseng et al. (2017b) R Quadcopter (4) 2.8 0 – 5 (23) X 
+Blue A-G-Mi D ’ Andrea (2014) I General (G) 4 12.5 (4)  
+Orange F-4-L Figliozzi (2017) I Quadcopter (4) 10.1 unknown (5)  
+Orange K-8-L Kirchstein (2020) C Octocopter (8) 12 22.2 (20 – 21)  
+Red S-8-L Stolaroff et al. (2018) C Octocopter (8) 17 10 (12 – 16) X 
+Red X-H-L Xu (2017) I Hybrid-current (H) 25 22.2 Not available
+3   
+1
+C = component model; R = regression model; I = integrated model; 
+2
+the setting in Dorling et al. (2017) uses a drone speed of 6 m/s although the 
+energy equation (8) does not include speed; 
+3
+based on D ’ Andrea (2014) 
+J. Zhang et al.                                                                                                                                                                                                          
+
+--- PAGE 11 ---
+Transportation Research Part D 90 (2021) 102668
+11
+Table 3b 
+Weight and energy information for key drone energy models.  
+ID Reference Epm (J/m) Takeoff Weight (kg) Body Weight (kg) Battery Weight (kg) Payload (kg) Battery Energy (KJ) Battery Energy Density (KJ/kg) 
+L-4-Mi Liu et al. (2017) 17.3 1.46 1.14 0.32 0 204 637 
+S-4-Mi Stolaroff et al. (2018) 47.4 2.57 1.07 1 0.5 540 540 
+DH-6-Mi Dorling et al. (2017) 15.7 3.5 1.5 0.5 1 325 650 
+DR-6-Mi Dorling et al. (2017) 48.9–85.1 3.5 1.5 0.5 0–1 325 650 
+T1-4-Mi Tseng et al. (2017a) 47.7–67.4 2.5 1.5 0.5 0–0.5 277 554 
+T2-4-Mi Tseng et al. (2017a) 85.3–107.3 3.4 2.2 0.6 0–0.6 360 599 
+A-G-Mi D’Andrea (2014) 39.2 6 2 2 2 900 450 
+F-4-L Figliozzi (2017) 77.8 12.6 6 4.1 2.5
+1 
+2797 682 
+K-8-L Kirchstein (2020) 127.2 13.25 2 10 1.25
+1 
+5400 540 
+S-8-L Stolaroff et al. (2018) 436.7 24 7 10 7 5400 540 
+X-H-L Xu et al. (2017) 168.0 23.85 13.3 8.3 1.15
+1 
+5806 702  
+1
+Average payload as the model assumes an empty return; the forward trip carries twice the payload in the table and the return trip has no payload. 
+J. Zhang et al.                                                                                                                                                                                                          
+
+--- PAGE 12 ---
+Transportation Research Part D 90 (2021) 102668
+12
+substantially with the payload, from under 20 J/m to over 400 J/m for payloads up to 7 kg; and (ii) with similar payloads the energy 
+consumption models differ by factors of several hundred percent. Other drone research that does not employ an explicit energy model, 
+but rather uses a fixed value for Epm , such as Ferrandez et al. (2016) (46.1 J/m), Moore (2019) (223.0 J/m) or Goodchild and Toy 
+(23.0 – 223.1 J/m) also show a very wide range of energy consumption rates. These findings document the lack of consensus regarding 
+the energy efficiency of drones, and have important implications when drawing conclusions from modeling drone operations. 
+Four of the references in Tables 3a and 3b identify and consider adjustments to the baseline energy consumption rates due to factors 
+such as wind and weather, avionics, flight profiles and future advances in technology. Table 4 summarizes the adjusted Epm values for 
+the four models. The first row in each grouping for each reference reflects the baseline setting (no avionics, or wind), with the other 
+rows showing adjustments for various additional conditions. The format of Table 4 is similar to Tables 3a and 3b , but with column 3 
+added to show the additional modeling considerations and column 9 showing the percentage change from the baseline. 
+The first three rows for the D ’ Andrea (2014) model show the moderate increase (20%) in Epm due to including avionics, and the 
+very large increase (261%) from including a strong wind (30 km/hr). The next three rows show the assumed 50% increase in Epm in 
+Figgliozzi (2017) due to “ adverse weather ” , and the assumed 50% reduction for a future advanced drone. The next four rows for 
+Kirchstein (2020) show a very small increase (3.4%) in Epm from including avionics, a very large increase (129%) due to including 
+strong winds of 45 km/hr, and a substantial increase (70%) by including both moderate winds (10 km/hr) and energy use for a 
+complete flight profile. The final three rows for Xu (2017) show the very large increase in Epm of 213% from using a larger drone with a 
+9.2 kg payload (and a shorter range due to using a fixed battery size), and a hypothetical large reduction in Epm of 83% from future 
+advances in drone designs (especially in improving the lift-to-drag ratio). 
+Table 4 demonstrates that incorporating more realistic operating conditions (e.g., especially high winds) and a complete delivery 
+profile (beyond just steady level flight) increases the Epm estimates substantially, in several cases over 100%. This suggests that using 
+Epm values for steady level flight may significantly underestimate the total energy consumption of a drone trip. On the other hand, two 
+researchers suggest that future developments in drone design have the potential to substantially reduce the energy requirements for 
+drone travel. While future drone technology developments are difficult to predict, the large impact of strong winds on energy con -
+sumption is an area that needs further research, especially with field measurements in real operating environments. Some drone 
+applications may allow flexible timing (such as scheduling inspections) to avoid wind and bad weather, while other applications (home 
+delivery or surveillance) may have very limited time flexibility. 
+In summary, the published literature on drone energy consumption shows a strong lack of consensus (and standards) on the 
+appropriate energy consumption rates, even for similar drone sizes and operations. The lack of consensus shown in Fig. 3 is further 
+amplified by the results in Table 4 from including additional practical considerations. The energy consumption estimates of drones 
+vary substantially from under 20 J/m to over 500 J/m. Because these differences are partly due to the different drones (e.g., different 
+sizes, motor and rotor details, etc.) and settings (speed, payload, wind, etc.) employed, and partly due to the different model structures, 
+in the following section we compare the models in a common setting with a common set of data reflecting two prototypical drones. 
+4.2. Results for different modeling approaches with a common drone and operational setting 
+To assess the drone energy consumption models from the literature on a common basis, we evaluate the five fundamental models 
+0
+50
+100
+150
+200
+250
+300
+350
+400
+450
+0 1 2 3 4 5 6 7
+Energy Consumption per Meter (J/m)
+Payload (kg)
+S-8-L
+DR-6-Mi
+T2-4-Mi
+T1-4-Mi
+L-4-Mi
+S-4-Mi
+DH-6-Mi
+A-G-Mi
+K-8-L
+X-H-L
+F-4-L
+Fig. 3. Epm results from baseline models in Tables 3a and 3b.  
+J. Zhang et al.                                                                                                                                                                                                          
+
+--- PAGE 13 ---
+Transportation Research Part D 90 (2021) 102668
+13
+Table 4 
+Key drone energy models with additional conditions.  
+ID Reference Additional conditions to baseline m
+1
++ m
+2 
+(kg)  Payload
+1 
+(kg) Airspeed v
+a 
+(m/s)  Range
+2
+(km) Epm (J/m)  % Epm increase to baseline 
+A-G-Mi D ’ Andrea (2014) Baseline 4    39.2 – 
+Avionics 2 12.5 10 47.2 20.0% 
+Wind (30 km/h), avionics    141.6 261% 
+F-4-L Figliozzi (2017) Baseline 10.1 2.5
+1 
+unknown 25 77.8 – 
+Adverse weather 116.7 50.0% 
+Advanced drone 38.9   50.0% 
+K-8-L Kirchstein (2020) Baseline 12 1.25
+1 
+22.2 9 127.2 – 
+Avionics 131.5 3.38% 
+Wind (45 km/h), avionics 300.6 129% 
+A complete flight profile with wind (10 km/h) & avionics 216.4 70.1% 
+X-H-L Xu (2017) Baseline: a complete flight profile with wind (10 km/h) & avionics 25.0 1.15
+1 
+22.2 16.1 168.0 – 
+Large drone 70.8 4.6
+1 
+12 525.0 213% 
+Advanced drone 5.2 1.15
+1 
+16.1 29.0   82.7%  
+1
+Average payload as the model assumes an empty return; the forward trip carries twice the payload in the table and the return trip has no payload. 
+2
+Range = half of the round-trip distance. 
+J. Zhang et al.                                                                                                                                                                                                          
+
+--- PAGE 14 ---
+Transportation Research Part D 90 (2021) 102668
+14
+discussed in Section 3 using common drone design parameters and a common operational setting, where the payload and speed are 
+allowed to vary. The five models are identified in Table 5 , along with the reference and their equation(s) for Epm . 
+The first model, denoted LD, is the integrated model with a lift-to-drag ratio, based on eq. (4) from D ’ Andrea (2014) . The second 
+model, denoted RH, includes the energy use for rotocopter hovering only, as in eq. (8) from Dorling et al (2017) . The third model, 
+Table 5 
+Five fundamental models for drone energy consumption of steady level flight.  
+Model Key Reference Epm  
+LD D ’ Andrea (2014) 
+∑
+3
+k = 1
+m
+k
+g
+r η  
+RH Dorling et al. 
+(2017) 
+(
+∑
+3
+k = 1
+m
+k
+g
+)
+3 / 2
+η v
+a
+̅̅̅̅̅̅̅̅̅ ̅
+2 n ρς
+√
+R2 Stolaroff et al. 
+(2018) 
+T ( v
+a
+sin α + v
+i
+)
+v
+a
+η
+where T =
+∑
+3
+k = 1
+m
+k
+g +
+1
+2
+ρ
+∑
+3
+k = 1
+C
+D k
+A
+k
+v
+a
+2 
+and v
+i 
+is found from solving equations (14 – 15)  
+R3 Kirchstein (2020) 
+1
+η
+⎛
+⎜
+⎝
+κ Tw
+v
+a
++
+1
+2
+ρ
+∑
+3
+k = 1
+C
+D k
+A
+k
+v
+a
+2
++
+κ
+2
+(
+∑
+3
+k = 1
+m
+k
+g
+)
+1 . 5
+v
+a
++ κ
+3
+(
+∑
+3
+k = 1
+m
+k
+g
+)
+0 . 5
+v
+a
+⎞
+⎟
+⎠ where T =
+̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅ ̅
+(
+∑
+3
+k = 1
+m
+k
+g
+)
+2
++
+(
+1
+2
+ρ
+∑
+3
+k = 1
+C
+D k
+A
+k
+v
+a
+2
+)
+2
+√
+√
+√
+√
+and w 
+is from solving equation (B2)  
+LR Tseng (2017b) 
+  2 . 595 +
+0 . 197 m
+2
++ 251 . 7
+v
+a
+(for small payloads and speeds less than 5 m/s)   
+Table 6 
+Parameter values used in drone energy use models in a common setting.  
+Panel 1. Parameter values that are independent of drone type 
+Term Symbol Value 
+Air density [kg/m
+3
+] ρ  1.225 
+Acceleration of gravity [m/s
+2
+] g  9.807 
+Ratio of headwind to airspeed [unitless] φ  0 
+Empty return (1 = yes; 0 = no) ϕ  1 
+Specific energy of the battery [J/kg] s
+batt  
+540,000 
+Battery power transfer efficiency (from battery to propeller) [unitless] η  0.7 
+Safety factor to reserve energy in the battery for unusual conditions [unitless] f  1.2 
+Maximum depth of discharge of the battery [unitless] γ  0.5  
+Panel 2. Parameter values that depend on drone type 
+Term Symbol Small Drone Large Drone 
+Number of blades in one rotor [unitless] N  4 3 
+Blade chord length [m] c  0.0157 0.1 
+Blade lift coefficient [unitless] c
+l  
+0.271 0.4 
+Blade drag coefficient (depends on the airfoil) c
+d  
+0.012 0.075 
+Number of rotors [unitless] n  4 8 
+Spinning area of one rotor [ m
+2
+]  ς  0.0507 0.027 
+Mass of drone body [kg] m
+1  
+1.07 7 
+Mass of battery [kg] m
+2  
+1 10 
+Mass of payload [kg] m
+3  
+0.5 7 
+Projected area of drone body [ m
+2
+] A
+1  
+0.0599 0.224 
+Projected area of battery [ m
+2
+] A
+2  
+0.0037 0.015 
+Projected area of payload [ m
+2
+] A
+3  
+0.0135 0.0929 
+Drag coefficient of drone body [unitless] C
+D 1  
+1.49 1.49 
+Drag coefficient of battery [unitless] C
+D 2  
+1 1 
+Drag coefficient of payload [unitless] C
+D 3  
+2.2 2.2 
+Lift-to-drag ratio [unitless] r  3 3 
+Power required for avionics [Watt = J/s] P
+avio  
+0 0 
+Factor for induced power [unitless] κ  1 1 
+Factor for profile power (m/kg)
+1/2 
+κ
+2  
+0.790 0.683 
+Factor for profile power associated with speed (m/kg)
+-1/2 
+κ
+3  
+0.0042 0.0868 
+Factor for parasite power with payload (kg/m) κ
+4  
+0.075 0.339 
+Factor for parasite power without payload (kg/m) κ
+4  
+0.057 0.214  
+J. Zhang et al.                                                                                                                                                                                                          
+
+--- PAGE 15 ---
+Transportation Research Part D 90 (2021) 102668
+15
+denoted R2, includes two rotocopter energy components to overcome the induced drag and parasite drag, as in Stolaroff et al. (2018) . 
+The fourth model, denoted R3, includes three rotocopter energy components, as it adds the profile drag to the induced and parasite 
+drag, as in Kirchstein (2020) . The final model, denoted LR, is the regression model from Tseng (2017b) that provides Epm as a function 
+of payload mass and airspeed. Because the LR regression model in Tseng et al. (2017b) was developed specifically for a small drone, we 
+do not include that model for large drones. 
+To compare the different models on a common basis we use the set of parameters shown in Table 6 (based mainly on data in 
+Stolaroff et al. (2018) ). Environmental parameters (e.g., gravity, air density, etc.) independent of drone design are fixed to the common 
+values shown in Panel 1 of Table 6 . To model small and large drones, we use the associated parameters values shown in Panel 2 of 
+Table 6 . The first set of parameters in column 3 of Panel 2 is associated with a small quadcopter drone capable of carrying a payload of 
+0.5 kg, such as might be used for medicine deliveries. The second set of parameters in column 4 of Panel 2 is associated with a larger 
+octocopter drone capable of carrying a payload of 7 kg, such as might be used for home delivery of consumer goods. Note that the large 
+drone battery has ten times the energy available as for the small drone. For all models, we include a common value for the power 
+transfer efficiency of the drone, and we also assume empty returns so the Epm values are the average of the loaded (with the payload) 
+and unloaded (without the payload) Epm values. We consider an environmental setting with no wind, and do not include energy 
+consumption for avionics, vertical flight or hovering. We vary either the airspeed or payload mass to explore their effects on Epm and 
+range. Thus, by using the same drone specification and flight conditions, we can document the Epm and flight range variabilities due to 
+the different model structures and assumptions (not due to different input data). The performance measures of interest are Epm and 
+flight range. Range is calculated from eq. (17) based on the Epm calculated using the equations in Table 5 . 
+4.2.1. The impact of speed on Epm and range for small and large drones 
+We first consider the effect of airspeed on Epm and range and identify the airspeeds that minimize Epm . We note that the LD model is 
+0
+20
+40
+60
+80
+100
+0 5 10 15 20 25
+Epm (J/m)
+Speed (m/s)
+RH R2 R3 LR LD
+(a) Small Drones
+0
+200
+400
+600
+800
+1000
+0 5 10 15 20 25
+Epm (J/m)
+Speed (m/s)
+RH R2 R3 LD
+(b) Large Drones
+Fig. 4. Energy consumption rate versus airspeed for small and large drones.  
+0
+3
+6
+9
+12
+0 5 10 15 20 25
+Range (km)
+Speed (m/s)
+RH R2 R3 LR LD
+(a) Small Drones
+0
+3
+6
+9
+12
+0 5 10 15 20 25
+Range (km)
+Speed (m/s)
+RH R2 R3 LD
+(b) Large Drones
+Fig. 5. Maximum flight range versus airspeed for small and large drones.  
+J. Zhang et al.                                                                                                                                                                                                          
+
+--- PAGE 16 ---
+Transportation Research Part D 90 (2021) 102668
+16
+a special case because it does not depend on airspeed (see Table 5 ), so we report results with the LD model using the cruising airspeed of 
+12.5 m/s from D ’ Andrea (2014) . A more sophisticated version of the LD model could use a speed dependent lift-to-drag ratio r ( v ) to 
+capture the impact of airspeed on Epm , but that is beyond the scope of this paper. 
+To analyze the effect of airspeed, we fix the payload at 0.5 kg for small drones and 7 kg for large drones and allow the airspeed to 
+vary from 1 to 25 m/s. Results for energy consumption and flight range are shown in Figs. 4 and 5 , respectively. The LR model in Fig. 4 
+(a) and 5(a) are shown only for speeds up to 5 m/s as that is the relevant speed range for the regression (Tseng, 2017b). The LD model is 
+represented by a point at 12.5 m/s, the cruising speed used in D ’ Andrea (2014) . For the other models, the Epm is a decreasing function 
+of airspeed for low speeds, with R3 providing the highest Epm and RH and R2 providing nearly identical Epm values (R2 and RH are 
+remarkably similar for speeds up to 8 m/s and 11 m/s for small and large drones, respectively). Epm is a convex function of airspeed for 
+the component models R2 and R3, as overcoming the parasite drag at high speeds requires a large increase in energy. 
+The shapes of the curves for Epm are similar for both small and large drones, though the curves are less steep for large drones, and at 
+higher speeds the Epm for model R3 remains above R2 with the large drone. For the RH, R2 and R3 models, the Epm is more sensitive to 
+lower speeds than higher speeds; and while the models all have similar shapes for low speeds, they may produce very different values. 
+For example, at 5 m/s the Epm values range from 43.1 J/m for R2 to 70.9 J/m for R3 for small drones ( Fig. 4 (a)) and from 467.5 to 
+485.8 for R2 and RH, to 1090.3 for R3 for large drones ( Fig. 4 (b)). The differing nature of the RH model (based on hovering) is clear in 
+Fig. 4 as with higher speeds its Epm continues to decline as it is unable to capture the effect of increasing air resistance. The LD models 
+provides an Epm that is generally lower than the other models, implying that the LD model with r = 3 represents a more efficient drone. 
+Fig. 5 (a) and 5(b) show the drone flight range versus airspeed for the models for small and large drones, respectively. As with Epm , 
+the range for the LD model does not change with speed, and is 10.4 km and 11.8 km for small and large drones, respectively, at 12.5 m/ 
+s. The range for the RH and LR models is linearly increasing in speed. The range for the R2 and R3 models follows a more complex 
+pattern reflecting the convex Epm graphs. For small drones, the maximum range for the R2 and R3 models (which occurs with the 
+energy-minimizing speed) is about 4 km and 3 km, respectively, less than half the range from the LD model. For large drones, the 
+maximum range for the R2 and R3 models is about 5.7 km and 2.9 km, respectively. 
+We note that slower speeds quickly increase energy consumption (see Fig. 4 ), so the range for all models (except LD) falls quickly 
+for slow drone speeds. For speeds below about 9 m/s for the small drone ( Fig. 5 (a)) or 11 m/s for the large drone ( Fig. 5 (b)), the RH and 
+R2 models provide very similar short ranges. The more comprehensive R3 model provides a shorter range. Note that the calculated 
+range values in Fig. 5 do not include any energy for hovering, takeoff and landing or ascending and descending, so the actual range 
+would be less than that shown based purely on steady level flight (see Kirchstein, 2020; Xu, 2017 ). 
+Figs. 4 and 5 show that the Epm minimizing and range maximizing speeds are higher for large drones than small drones, and higher 
+for R3 models than R2 models for the same drone. Table 7 shows the speed that minimizes Epm and the associated Epm and (maximum) 
+range for the R2 and R3 models, along with results for the LD model at 12.5 m/s and the RH model at 6 m/s (these are the speed values 
+used in the references presenting the LD and RH models). For R2 and R3, the large drone has a higher optimal speed and much greater 
+Epm values (as expected). For the small drone at the optimal speeds, in comparison to the R2 model, the R3 model estimates a 34% 
+higher Epm and a 25% shorter range. For the large drone at the optimal speeds, in comparison to the R2 model, the R3 model estimates 
+a 96% higher Epm and a 49% shorter range. The LD model (with r = 3 at speed 12.5 m/s) generally provides a much lower Epm and a 
+longer range than the other models (e.g., a 62% lower Epm and a 160% longer range for the small drone compared to R2). We note that 
+the LD model uses r = 3 (from D ’ Andrea (2014) ) which is not necessarily the best value for drone delivery with the small or large drone 
+described in Table 6 . These results underscore the importance of both model and parameter selection, especially the lift-to-drag ratio r 
+for the LD model. For example, adjusting the lift-to-drag ratio r to a value of 0.8 – 1.2 (0.7 – 1.4) would make LD model produce results 
+similar to the energy-minimizing values for the R2 and R3 models for small (large) drones. 
+4.2.2. The impact of payload on Epm and range for small and large drones 
+In this section, we examine the impact of payload on Epm and flight range for small and large drones described in Table 6 (the small 
+quadcopter drone has a maximum payload of 0.5 kg and the large octocopter drone has a maximum payload of 7 kg). Because the Epm 
+depends on payload and speed (See Table 5 ), we use the optimal ( Epm minimizing) speed for the R2 and R3 models at each payload 
+value as a fair comparison. For the R2 model with the small drone, the optimal speed is 9 m/s for payloads ranging from 0 to 0.47 kg, 
+and 10 m/s for payloads ranging from 0.48 to 0.5 kg. For the R2 model with the large drone, the optimal speed is 13 m/s for payloads of 
+0 – 0.5 kg. For the R3 model, the optimal speeds are consistently 11 m/s and 16 m/s across payloads of 0 – 7 kg for small and large drones, 
+Table 7 
+Comparison of models at the Epm minimizing speed for R2 and R3.   
+Model Epm (J/m) Speed (m/s) Range (km) 
+Small Drone LD 10.8 12.5
+1 
+10.4 
+RH 36.8 6
+1 
+3.1 
+R2 28.2 10 4.0 
+R3 37.8 11 3.0 
+Large Drone LD 95.7 12.5
+1 
+11.8 
+RH 404.8 6
+1 
+2.8 
+R2 211.6 13 5.3 
+R3 415.8 16 2.7  
+1
+speed used by author in presenting the model 
+J. Zhang et al.                                                                                                                                                                                                          
+
+--- PAGE 17 ---
+Transportation Research Part D 90 (2021) 102668
+17
+respectively. For the LD, RH and LR models, where Epm is a point or a decreasing function of speed, we use the speed presented in the 
+key reference ( Table 5 ), i.e., 12.5 m/s for LD model, 6 m/s for RH model, and 5 m/s for LR model. 
+We begin by examining the effect of payload on Epm . Fig. 6 (a) and 6(b) show an approximately linear increase in Epm with 
+increasing payload for all models. In Fig. 6 (b) the Epm increases by 20 – 40% for the four models as the payload rises from 0 to 7 kg. 
+While the patterns are similar in Fig. 6 (a) and 6(b), the Epm values for large drones are about 6 – 10 times greater than those of small 
+drones for the same model within 0 – 0.5 kg payload range. This underscores the importance of using an appropriately sized drone for 
+the payload. Using large drones with small payloads produces high Epm values mainly due to the increased drone weight (including 
+battery), which is outsized for the payload weight. 
+For both small and large drones, the LD model provides the lowest Epm values (about 10 J/m and 80 – 96 J/m, respectively). For the 
+small drone, the LR model provide the largest Epm values of 47.8 – 57.6 J/m. The RH and R3 models provide similar values of 31.4 – 37.8 
+J/m and 344.0 – 415.3 J/m for small and large drones, respectively. The R2 model provides results which are approximately 2 – 2.5 
+times the LD results. As noted above, a smaller lift-to-drag ratio in the LD model would increase the Epm to provide very similar results 
+to the other models. We also observe that the high energy consumption for the R3 model is in part due to it including the profile drag, 
+while using the same power transfer efficiency ( η = 0 . 7) as the other models. So, modelers could use a lower power transfer efficiency 
+to reflect modeling fewer components of power (e.g., a lower η value could be used in R2 compared to R3 for not including the profile 
+power directly in R2). The high Epm value of the LR for small drones ( Fig. 6 (a)) may reflect the importance of optimizing drone 
+operating speeds as discussed in Section 4.2.1 . 
+Fig. 7 (a) and 7(b) show the flight range for all models as a function of the payload for small and large drones, respectively (again 
+using optimal speeds for the R2 and R3 models). As expected, the flight range decreases for all models as payload increases. For both 
+small and large drones, the LD model provides the largest ranges (10.5 – 11.6 km and 12.1 – 14.2 km, respectively) with the largest 
+decreases (1.1 km or 11% and 2.1 km or 18%, respectively). As with Epm , the LR model provide the smallest range values of 2.0 – 2.4 km 
+for the small drone. The RH and R3 models provide similar values of 3.0 – 3.5 km for both small and large drones. The R2 model 
+0
+10
+20
+30
+40
+50
+60
+0.00 0.10 0.20 0.30 0.40 0.50
+Epm (J/m)
+Payload (kg)
+LD RH R2 R3 LR
+(a) Small Drones
+0
+100
+200
+300
+400
+500
+600
+0 1 2 3 4 5 6 7
+Epm (J/m)
+Payload (kg)
+LD RH R2 R3
+(b) Large Drones
+Fig. 6. Energy consumption rate versus payload for small and large drones.  
+0
+3
+6
+9
+12
+15
+0.00 0.10 0.20 0.30 0.40 0.50
+Range (km)
+Payload (kg)
+LD RH R2 R3 LR
+(a) Small Drones
+0
+3
+6
+9
+12
+15
+0 1 2 3 4 5 6 7
+Range (km)
+Payload (kg)
+LD RH R2 R3
+(b) Large Drones
+Fig. 7. Maximum range versus payload for small and large drones.  
+J. Zhang et al.                                                                                                                                                                                                          
+
+--- PAGE 18 ---
+Transportation Research Part D 90 (2021) 102668
+18
+provides results which are 39%-48% of the LD model. 
+As with Epm , a smaller lift-to-drag ratio in the LD model, with r between 1.5 and 0.6 instead of 3, would produce range results 
+between the lower limit from LR (or RH and R3) and the upper limit from R2. As with Epm , the results show the large variability in 
+ranges for the different models, a finding with clear implications for the number of customers that could be served by drone and for the 
+number of drone depots needed to serve a region. In comparing the ranges of the small and large drones with the different models 
+across the payload values, we observe the following: (i) for RH and R3, the range values are very similar for the large and small drone, 
+(ii) for R2, the range for the large drone is 38 – 44% greater than that for the small drone. Note that the large drone has a battery with ten 
+times more energy than the small drone, while the large drone total weight (body, battery and payload) is 8 – 9 times larger than the 
+small drone depending on the payload. 
+In summary, Figs. 4-7 show the very wide variation in Epm and range values for different modeling approaches with the same drone 
+operating in a common setting. These differences have strong implications for accurately modeling the energy and assessing the 
+environmental impacts of drone delivery. These results also indicate that the selection of the lift-to-drag ratio r and the power transfer 
+efficiency η , both of which are difficult to assess without taking measurements in flight, can be crucial in accurately estimating drone 
+energy consumption. It is also important to use an appropriate drone for the items (and purpose of delivery) and to optimize the 
+operating speed. 
+5. Discussion and insights 
+The results in this paper demonstrate very large differences in drone energy consumption rates and operating ranges derived from 
+different models in the literature. Some of the reported results differ due to different drone types and different operating conditions. 
+However, even with a common setting that uses the same drone design and operating parameters (as in Section 4.2 ), the models 
+provide Epm and range estimates for steady level flight that differ substantially. Further, we note that when a full drone delivery flight 
+profile is included (with takeoff, ascent, hovering, descent, and landing phases), the Epm values can be substantially higher than the 
+results for the steady level flight alone. Key findings from this research include:  
+• There are several fundamentally different approaches for modeling drone energy consumption, including integrated approaches 
+reliant on a single lift-to-drag ratio to capture performance, component-based models developed to capture the influence of key 
+aerodynamic forces, and regression models calibrated from field tests or from theoretical models.  
+• For published models, the energy consumption rate ( Epm ) for steady level flight ranges from 16 J/m to over 400 J/m for different 
+types of drones with different payloads. Even for small drones with payloads up to 1 kg, the literature provides Epm values that 
+differ by a factor of six. Note that many of these Epm values reflect commercial off-the-shelf drones (for both theoretical modeling 
+and field experiments), not drones designed specifically for package delivery, and thus may not reflect actual drone delivery 
+operations.  
+• The large differences in Epm values cannot be reconciled by using a common set of environmental, drone design and operating 
+parameters. Even with the common sets of parameters, the energy consumption rate ( Epm ) varies by a factor of 3 – 5 across the 
+models (see Figs. 4 and 6 ). The estimated drone flight ranges differ similarly for the models.  
+• Integrated models (like the LD model) have the appeal of simplicity, but are very sensitive to the choice of the lift-to-drag ratio, 
+which might vary with airspeed. Thus, only with a properly calibrated lift-to-drag ratio (based on field experiments in the relevant 
+setting) and operating airspeed will they provide accurate estimates of energy consumption.  
+• Models based only on energy consumption for drone hovering (like the RH model) may provide very good approximations at low 
+airspeeds. However, at higher speeds they cannot capture the increased parasite drag that grows to dominate the energy 
+consumption.  
+• Component models provide the most detail, but are the most difficult to develop and calibrate given the number of parameters 
+involved. Component models capture the strong dependence of Epm and range on airspeed, and allow identification of an energy- 
+minimizing airspeed.  
+• The two-component model (R2) and a three-component model (R3) highlighted the differences from modeling profile power 
+directly and the importance of using a proper power transfer efficiency adjustment. All drone energy models include a power 
+transfer adjustment to reflect losses due to a variety of sources, including battery charging efficiency, motor efficiency, drone blade 
+performance, etc.; so it would be natural for a two component model to include a lower power transfer efficiency than a three 
+component model to reflect power losses from the “ missing ” component. Our use of a common power transfer efficiency may 
+explain in part the lower energy consumption for the R2 vs. R3 model.  
+• Published results for energy consumption from drone field tests often do not agree with results from theoretical energy models. We 
+encourage modelers to account for the energy used in the entire drone delivery/trip profile (takeoff, ascent, hovering, descent, 
+landing, and return), as well as for avionics and wind conditions to accurately estimate total energy consumption.  
+• There is a strong need for more field experiments to establish standards for drone energy consumption, analogous to vehicle fuel 
+efficiency standards for trucks. This could include aggregate Epm measures as well as parameter values for modeling various drone 
+types, including new hybrid drones. Such a set of commonly accepted parameter values for effective delivery drones will be of great 
+use in research on optimizing the design and operation of all types of drone operations, including delivery systems. 
+As energy consumption is important to both drone cost and emissions, an important broad research area is to better link drone 
+energy consumption models with route optimization and strategic drone delivery systems design to assess the tradeoffs between cost, 
+J. Zhang et al.                                                                                                                                                                                                          
+
+--- PAGE 19 ---
+Transportation Research Part D 90 (2021) 102668
+19
+energy, and emissions in drone delivery. For drones, the role of airspeed, as well as wind conditions, has a very important influence on 
+energy consumption, more so than for trucks and other ground delivery vehicles, and should also be included in energy use models. 
+6. Conclusions 
+In this study, we provide an assessment of key energy consumption models for drone delivery. We identify the important factors 
+that influence drone energy consumption and discuss and highlight key similarities and differences in drone energy models. We also 
+provide an understanding of why the energy consumption models differ from each other, and identify important parameters that 
+contribute to these differences. Our results document wide differences in drone energy consumption rates, even for models of the same 
+drones applied in common settings. The selection of the lift-to-drag ratio r and the power transfer efficiency η , both of which are 
+difficult to assess without taking measurements in flight, can be crucial in accurately estimating energy consumption for drones. 
+The energy consumption differences we document have strong implications for accurately modeling the energy and environmental 
+implications of all drone operations, including delivery. Given that the models can provide Epm values that differ by a factor of 3–5 (or 
+more), great care must be taken in translating results from transportation modeling (e.g., drone route modeling and optimization) to 
+estimates and policy recommendations involving energy and emissions. The mixed research results regarding the energy and emissions 
+efficiency of drone delivery are not surprising given the wide variability in energy consumption estimates produced from different Epm 
+models. This underscores the need for further research to build a consensus on accurate parameter values for different types of delivery 
+drones and different settings. 
+Our goal is not to identify one preferred model, but rather to document the discrepancies between models and highlight the need for 
+accurate calibration of whatever model is adopted. All models examined in this paper can produce similar results with an appropriate 
+set of parameter values. Given the lack of widespread drone delivery operations that limit direct measurements in the field, it is not 
+surprising there is no agreement on accurate parameter values in the academic research community. Further, with the rapid rate of 
+evolution in drone technology, those parameter values will likely change frequently as the field matures, necessitating ongoing 
+research. 
+This research suggests a number of important areas for future research. Clearly, a better understanding of the accuracy of drone 
+energy models is needed through comparing results to empirical data derived from comprehensive drone delivery field tests. These 
+empirical tests might best be undertaken in a partnership between government agencies (e.g., the U.S. Department of Energy or EPA), 
+academic institutions, and private sector firms. The importance of avionics and wind conditions on drone energy consumption is an 
+area especially needing more attention, with particular care to the numbers, sizes and types of drones deployed. Future research can 
+also help identify which type of model (complex or simple) is best in different settings, and whether or when more parsimonious 
+models are “accurate enough” to use. 
+Acknowledgement 
+The authors thank the Editor-in-Chief Dr. Jason Cao and two anonymous reviewers for their valuable suggestions and comments 
+that have helped improve this manuscript. 
+Appendix A 
+With appropriate data, the drone energy consumption rate Epm can be calculated as 
+Table A1 
+Manufacturer data for commercial drones.  
+Drone Takeoff 
+Weight 
+(kg) 
+Max 
+Flight 
+Time 
+Max Hover 
+Time 
+(min) 
+Max 
+Speed 
+(m/s) 
+Max Flight 
+Distance 
+(km) 
+Distance 
+Calculated from 
+Column 3 (km) 
+Distance Calculated 
+using Columns 4 & 5 
+(km) 
+Battery 
+Energy (J) 
+Epm 
+(J/m) 
+Mavic Spark 0.30 16 min at 
+5.56 m/s 
+15 13.9 9 5.33 12.5 60,739 6.7 
+Mavic Air 0.43 21 min at 
+6.94 m/s 
+20 19.0 10 8.75 22.8 98,753 9.9 
+Mavic Pro 0.73 27 min at 
+6.94 m/s 
+24 18.1 13 11.25 26.1 157,183 12.1 
+Mavic 2 Pro 0.91 31 min at 
+6.94 m/s 
+29 20.0 18 12.92 34.8 213,444 11.9 
+Phantom 4 
+Pro 
+V2.0 
+1.38 30 min at 
+5.56 m/s 
+28 20.0 14 10.00 33.6 321,206 22.9 
+3DR-Solo 1.8 20 min – 25.0 8 – – 277,056 34.6 
+MD4-3000 11.0 45 min – 20.25 36* – – 2,797,200 77.7  
+*
+from Figliozzi (2017). 
+J. Zhang et al.                                                                                                                                                                                                          
+
+--- PAGE 20 ---
+Transportation Research Part D 90 (2021) 102668
+20
+Epm =
+BatteryEnergy
+FlightDistance
+(A1) 
+Information on the BatteryEnergy is often, but not always, provided by the manufacturer; either in Watt-hours (1 Wh = 3600 J) or as 
+capacity and voltage, where 
+BatteryEnergy ( inJ ) = Capacity ( inmAh ) × Voltage ( inV ) × 3 . 6 . (A2) 
+However, FlightDistance information is not reported by all manufacturers, nor is it provided in a consistent manner. Flight distance 
+data from manufacturer websites may be the distance under conditions that maximize that distance (e.g., the speed, altitude and 
+weather conditions that maximize distance) and do not reflect real-world drone operations. We are aware of only a few drones for 
+which flight distance at an associated speed is reported (see Table A1 ). As most manufacturers report a flight time or hovering time and 
+a maximum speed for each drone, it is tempting to use that data to estimate flight distance as 
+FlightDistance = FlightSpeed × FlightTime (A3) 
+Yet, because manufacturers often report a maximum value (e.g., “ Max Flight Time ” or “ Max Speed ” ) or an unspecified value (e.g., 
+“ Flight Time ” ), and drone energy use depends strongly on speed, combining a maximum flight (or hovering) time with a maximum 
+speed is likely to provide an inaccurate flight distance measure. Thus, the seemingly straightforward approach of FlightSpeed ×
+FlightTime is fraught with uncertainties due to unclear and inconsistent reporting of information by different manufacturers, as well as 
+inconsistencies across drones for the same manufacturer. 
+As an example of the difficulties, consider the data below for DJI drones in the first 5 rows of Table A1 (from https://www.dji.com/ 
+products/compare-consumer-drones ), which provides “ Max Flight Time ” at a particular speed (see column 3), along with “ Max 
+Hovering Time ” , “ Max Speed ” and “ Max Flight Distance ” (see columns 4 – 6). The flight distance calculated based on the time and speed 
+in column 3 using eq. (A3) is shown in column 7, and the flight distance calculated based on the hovering time (column 5) and 
+maximum speed (column 6) (using eq. (A3) with hovering time) is shown in column 8. Note that the three flight distance values in 
+columns 6 – 8 disagree considerably. It is not surprising that column 8 is much greater than the flight distance in column 6 (on average 
+about twice as large), because high speeds increase the rate of energy consumption which would reduce the endurance at that 
+maximum speed to well below the hovering time. It may also not be surprising that the distances calculated in column 7 (based on the 
+speed and time from column 3) are much less (13%-40% less) than the reported flight distance in column 6, if the column 6 values are 
+based on the distance-maximizing speed (while column 3 may report the typical operational speed; and we note speeds of 5 – 6 m/s are 
+typical for imaging applications). This illustrates the need to use common data elements, and the dangers of combining different 
+calculations of flight distance across different manufacturers. 
+We do not include values for other DJI drones (Inspire, the Matrice series, and the Agricultural drones AGRAS T-16 and the MG 
+series) in Table A1 , as the website does not provide flight distances for its other drones (only the maximum flight or hovering time and 
+maximum speed). We were able to collect relevant data for 2 other drones from manufacturer websites, as shown in the last two rows of 
+Table A1 for the Microdrones MD4-3000 and the 3D Robotics 3DR-Solo. Thus, Table A1 includes data for three manufacturers where 
+both flight distance and battery energy information was reported. Columns 2 – 6 and 9 are from the manufacturer websites. Column 9 is 
+the battery energy, either provided directly or calculated based on capacity (mAh) × voltage. Columns 7 and 8 are calculated flight 
+distances for the DJI drones as described above. Column 10 is the Epm calculated using equation (A1) (column 9 divided by column 6). 
+Because of the issues illustrated above for the DJI drones, we are hesitant to recommend computing energy consumption rates using 
+manufacturer data unless the drone operating conditions are clearly specified and they match the particular application of interest (e. 
+g., imaging may require slower speeds than delivery). We also note that energy consumption rates calculated with manufacturer data 
+using a takeoff weight with no payload is not directly comparable to energy consumption rates in the literature for delivery drones 
+carrying a payload. Finally, we also note that some researchers reduce the battery energy available for flight or the travel distance to 
+reflect operating realities. For example, Figliozzi (2017) assumes for one of his analyses that the drone flight range is only 70% of the 
+maximum flight distance to account for unknown factors (e.g., bad weather) that increase energy consumption and to provide a safety 
+margin. To achieve a similar goal, Stolaroff et al. (2018) and Troudi et al. (2018) assume a safety factor of 1.2 and 1.25, respectively, to 
+reserve energy for unusual conditions (which is equivalent to using 83.3% and 80% of maximum flight distance, respectively). 
+Appendix B 
+This appendix provides a derivation of the energy consumption for a battery powered aircraft in steady level flight (i.e. at a constant 
+altitude and constant speed), as in D ’ Andrea (2014) , based on fundamental principles of flight. Four fundamental forces acting on an 
+aircraft in steady flight are thrust to move forward, weight from gravity acting on the aircraft mass, lift in the direction opposing 
+gravity, and drag in the direction opposing travel (from aerodynamic effects of the shape of the aircraft, such as friction with air). The 
+amount of energy in joules needed to fly a distance d (measured in meters) at constant altitude can be modeled as 
+E
+fly
+= T × d (B1) 
+where T is the thrust force measured in Newtons (kg-m/sec
+2
+). Note that this does not account for the energy involved with the 
+vertical travel components to lift the aircraft from the ground to a cruising altitude and to lower it back to the ground. For drone 
+delivery, this may occur twice each trip, once at takeoff/landing and once for the delivery; however, drone deliveries may not require 
+landing, as the package may be lowed via a tether or dropped via parachute. 
+J. Zhang et al.                                                                                                                                                                                                          
+
+--- PAGE 21 ---
+Transportation Research Part D 90 (2021) 102668
+21
+An important factor for aircraft performance is the lift-to-drag ratio r , a unitless parameter which captures the efficiency of the 
+aircraft design in keeping the aircraft airborne. Values of the lift-to-drag ratio range widely from about 10 – 20 for commercial pas -
+senger aircraft to about 4 for helicopters in cruising flight, to typically smaller values for UAV rotocopters. The lift-to-drag ratio varies 
+with aircraft speed due to drag and the aerodynamic affects from lifting surfaces, but is constant in steady flight. To keep the aircraft in 
+steady flight, lift is equal to weight and thrust is equal to drag, so 
+T = drag =
+lift
+r
+=
+weight
+r
+=
+mass × g
+r
+(B2) 
+where g is the acceleration due to gravity (9.8 m/sec
+2
+) and mass is the total weight of the aircraft (body, battery and payload) in kg. 
+Combining (B1) and (B2) gives 
+E
+fly
+=
+( m
+1
++ m
+2
++ m
+3
+) × g
+r
+× d (B3) 
+where m
+1
+is the mass of the aircraft structure, m
+2 
+is the mass of the aircraft battery and m
+3 
+is the mass of the payload. 
+An important parameter for battery powered drones is the efficiency for converting battery power to “ flight ” power delivered by the 
+rotors, denoted η (unitless), where η < 1. Thus, the energy required from the battery for steady flight is 
+E
+fly
+=
+( m
+1
++ m
+2
++ m
+3
+) × g
+η r
+× d (B4) 
+Additional energy is consumed by the drone avionics required for safe flight, including communications, sensing, computation, etc. 
+Let P
+avio 
+be the power required for the aircraft (drone) avionics in joules per second of flight. The energy for avionics (in joules) for a 
+flight of distance d is then 
+E
+avio
+= P
+avio
+×
+d
+v
+(B5) 
+The total energy expended by the aircraft battery (in joules) on a flight of distance d is from equations (B4) and (B5) : 
+E
+tot
+=
+( m
+1
++ m
+2
++ m
+3
+) g
+r η
+d + P
+avio
+×
+d
+v
+(B6) 
+The total energy expended per meter of flight Epm is then 
+Epm =
+( m
+1
++ m
+2
++ m
+3
+) g
+r η
++
+P
+avio
+v
+(B7) 
+This is equivalent to the formula presented in D ’ Andrea (2014) for power 
+( m
+1
++ m
+2
++ m
+3
+) v
+370 r η
++ P
+avio 
+because power equals Epm × v , and the constant 370 in the denominator of the first term results from substituting in 9.81 for g and 
+measuring speed in km/hr rather than m/sec (3600/9.81 = 367). 
+Appendix C 
+The model in Kirchstein (2020) for steady flight is based on the power model in Langelaan et al. (2017) where the power for 
+constant speed flight includes four components for: induced power for lift, power to overcome parasite drag, profile power, and 
+ascending/descending power (based on flight angle θ ). This is expressed as a function of the mass and flight angle: 
+P ( m
+k
+, v
+a
+, γ ) = κ wT +
+1
+2
+ρ
+(
+∑
+3
+k = 1
+C
+D
+k
+A
+k
+)
+v
+a
+3
++
+ρ
+̅̅̅̅̅̅̅ ̅
+ς / π
+√
+nNcc
+d
+8
+v
+T
+3
+(
+1 + 3
+(
+v
+a
+v
+T
+)
+2
+)
++
+(
+g
+∑
+3
+k = 1
+m
+k
+)
+v
+a
+sin θ (C1) 
+where v
+T
+=
+̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅ ̅
+6
+nNcc
+l
+ρ
+̅̅̅̅ ̅
+ς / π
+√
+√
+̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅ ̅
+g
+∑
+3
+k = 1
+m
+k
+√
+is the blade tip speed. The parameter w , like the induced velocity in Stolaroff et al. (2018) , is 
+found by solving the following equation 
+w =
+T
+2 n ρς
+̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅ ̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅ ̅̅̅̅̅ ̅
+( v
+a
+cos α )
+2
++ ( v
+a
+sin α + w )
+2
+√ (C2) 
+where T is from equation (20) and α is from equation (15) . 
+The energy per meter for steady level flight ( θ = 0 ) for a total drone mass of m (including battery and payload if any) with avionics 
+power P
+avio 
+is 
+Epm =
+P ( m , v
+a
+, 0 )
+η v
+a
++
+P
+avio
+η
+c
+v
+a
+(C3) 
+J. Zhang et al.                                                                                                                                                                                                          
+
+--- PAGE 22 ---
+Transportation Research Part D 90 (2021) 102668
+22
+Kirchstein (2020) uses a total energy efficiency η for drone flight power that includes the motor, transmission and battery charging 
+efficiency, but only the charging efficiency η
+c 
+for the avionics. 
+For a delivery by a drone moving at speed v
+a 
+with no wind to a distance d from the depot, the total energy including take-off and 
+ascent at 45
+◦
+to an altitude of alt , level flight, hovering for time t
+hover
+, and then landing, is 
+Epm =
+1
+v
+a
+[
+P ( m , v
+a
+, 0 )
+η
++
+P
+avio
+η
+c
+]
++
+1
+v
+a
+alt
+d
+1
+η
+[ P ( m , v
+a
+, 45
+◦
+) + P ( m , v
+a
+,   45
+◦
+)   2 P ( m , v
+a
+, 0 ) ]
++
+t
+hover
+d
+[
+P ( m , 0 , 0 )
+η
++
+P
+avio
+η
+c
+]
+(C4) 
+The return trip would be the same, but without the payload ( m = m
+1
++ m
+2
+). The first term in (C4) is for the level flight, which will 
+usually be the majority of the trip (unless the delivery is for a very short distance), the second term is for the ascending and descending, 
+and the last term is for hovering. 
+References 
+Adams E., 2016. DHL ’ s Tilt-Rotor ‘Parcelcopter ’ is both awesome and actually useful. WIRED. Retrieved January 23rd, 2020 from: https://www.wired.com/2016/05/ 
+dhls-new-drone-can-ship-packages-around-alps/. 
+Agatz, N., Bouman, P., Schmidt, M., 2018. Optimization approaches for the traveling salesman problem with drone. Transportation Science 52 (4), 965 – 981 . 
+Ai, S.M., 2019. Personal communication, December 1st, 2019. 
+Barth, M., Younglove, T., Scora, G., 2005. Development of a heavy-duty diesel modal emissions and fuel consumption model. UC Berkeley Research Reports, 
+Permalink https://escholarship.org/uc/item/67f0v3zf .  
+Chauhan, D., Unnikrishnan, A., Figliozzi, M., 2019. Maximum coverage capacitated facility location problem with range constrained drones. Transportation Research 
+Part C: Emerging Technologies 99, 1 – 18 . 
+Cheng, C., Adulyasak, Y., Rousseau, L.M., 2020. Drone routing with energy function: Formulation and exact algorithm. Transportation Research Part B: 
+Methodological 139, 364 – 387 . 
+Chiang, W.C., Li, Y., Shang, J., Urban, T.L., 2019. Impact of drone delivery on sustainability and cost: Realizing the UAV potential through vehicle routing 
+optimization. Appl. Energy 242, 1164 – 1175 . 
+Choudhury, S., Solovey, K., Kochenderfer, M.J. and Pavone, M., 2019. Efficient large-scale multi-drone delivery using transit networks, arXiv preprint arXiv: 
+1909.11840. 
+Chung, S.H., Sah, B., Lee, J., 2020. Optimization for drone and drone-truck combined operations: A Review of the State of the Art and Future Directions. Comput. 
+Oper. Res. https://doi.org/10.1016/j.cor.2020.105004 . 
+Cohen, J. K., 2019. WakeMed Health & Hospitals joins forces with UPS, FAA for drone pilot. Modern Healthcare. Retrieved January 23rd, 2020 from: https://www. 
+modernhealthcare.com/care-delivery/wakemed-health-hospitals-joins-forces-ups-faa-drone-pilot. 
+D ’ Andrea, R., 2014. Guest editorial can drones deliver? IEEE Trans. Autom. Sci. Eng. 11 (3), 647 – 648 . 
+Demir, E., Bektas ¸ , T., Laporte, G., 2014. A review of recent research on green road freight transportation. Eur. J. Oper. Res. 237 (3), 775 – 793 . 
+Di Franco, C., Buttazzo, G., 2015. Energy aware coverage path planning of UAVs. 2015 IEEE International Conference on Autonomous Robot Systems and 
+Competitions . 
+DJI website (2020), Phantom 4 specifications. Retrieved May 3rd, 2020 from: https://www.dji.com/phantom-4-pro-v2/specs retrieved May 3rd, 2020. 
+Dorling, K., Heinrichs, J., Messier, G.G., Magierowski, S., 2017. Vehicle routing problems for drone delivery. IEEE Transactions on Systems, Man, and Cybernetics: 
+Systems 47 (1), 70 – 85 . 
+Drones in HealthCare. A role for drones in healthcare. Retrieved January 23rd, 2020 from: https://www.dronesinhealthcare.com/. 
+Ferrandez, S.M., Harbison, T., Weber, T., Sturges, R., Rich, R., 2016. Optimization of a truck-drone in tandem delivery network using k-means and genetic algorithm. 
+Journal of Industrial Engineering and Management (JIEM) 9 (2), 374 – 388 . 
+Figliozzi, M.A., 2017. Lifecycle modeling and assessment of unmanned aerial vehicles (drones) CO 2 e emissions. Transportation Research Part D: Transport and 
+Environment 57, 251 – 261 . 
+Goodchild, A., Toy, J., 2018. Delivery by drone: An evaluation of unmanned aerial vehicle technology in reducing CO
+2 
+emissions in the delivery service industry. 
+Transportation Research Part D: Transport and Environment 61, 58 – 67 . 
+Gulden, T.R., 2017. The energy implications of drones for package delivery. RAND Corporation, Santa Monica, CA .  
+Ha, Quang Minh, Deville, Yves, Pham, Quang Dung, H `ac, Minh Ho `ang, et al., 2018. On the min-cost traveling salesman problem with drone. Transportation Research 
+Part C: Emerging Technologies, . 
+Heath N., 2018. Project Wing: A cheat sheet on Alphabet ’ s drone delivery project. Retrieved January 23rd, 2020 from: https://www.techrepublic.com/article/project- 
+wing-a-cheat-sheet/. 
+Hoffmann, G., Huang, H., Waslander, S., and Tomlin, C., 2007. Quadrotor helicopter flight dynamics and control: Theory and experiment. In: AIAA Guidance, 
+Navigation and Control Conference and Exhibit (p. 6461). 
+Hong, I., Kuby, M., Murray, A.T., 2018. A range-restricted recharging station coverage model for drone delivery service planning. Transportation Research Part C: 
+Emerging Technologies 90, 198 – 212 . 
+Huang, H., Savkin, A.V., Huang, C., 2020b. A new parcel delivery system with drones and a public train. J Intell Robot Syst. https://doi.org/10.1007/s10846-020- 
+01223-y . 
+Huang, H., Savkin, A.V., Huang, C., 2020a. Reliable Path Planning for Drone Delivery using a Stochastic Time-Dependent Public Transportation Network. IEEE Trans. 
+Intell. Transp. Syst. 
+Jeong, H.Y., Song, B.D., Lee, S., 2019. Truck-drone hybrid delivery routing: Payload-energy dependency and No-Fly zones. International Journal of Production 
+Economics 214 (2019), 220 – 233 . 
+Josephs L., 2019. UPS wins first broad FAA approval for drone delivery. CNBC. Retrieved January 23rd, 2020 from: https://www.cnbc.com/2019/10/01/ups-wins- 
+faa-approval-for-drone-delivery-airline.html. 
+Kirchstein, T., 2020. Comparison of energy demands of drone-based and ground-based parcel delivery services. Transportation Research Part D: Transport and 
+Environment 78, 1 – 18. https://doi.org/10.1016/j.trd.2019.102209 . 
+Kithacharoenchai, P., Min, B-C. and Lee, S., 2020. Two echelon vehicle routing problem with drones in last mile delivery. International journal of Production 
+Economics 225, 107598. 
+Langelaan, J.W., Schmitz, S., Palacios, J., and Lorenz, R.D., 2017. Energetics of rotary-wing exploration of titan. In: Aerospace Conference, 2017 IEEE, pages 1 – 11. 
+IEEE. 
+Lee, D., 2019. Amazon to deliver by drone ‘within months ’ . Retrieved July 12th, 2019 from: https://www.bbc.com/news/technology-48536319. 
+J. Zhang et al.                                                                                                                                                                                                          
+
+--- PAGE 23 ---
+Transportation Research Part D 90 (2021) 102668
+23
+Leishman, J.G., 2002. Principles of helicopter aerodynamics, Vol. 12. Cambridge University Press. 
+Liu, Y., 2019. An optimization-driven dynamic vehicle routing algorithm for on-demand meal delivery using drones. Comput. Oper. Res. 111, 1–20. 
+Liu, Z., Sengupta, R., and Kurzhanskiy, A., 2017. A power consumption model for multi-rotor small unmanned aircraft systems. In: 2017 International Conference on 
+Unmanned Aircraft Systems (ICUAS) (pp. 310-315). IEEE. 
+Lohn, A. J., 2017. What’s the buzz? The city-scale impacts of drone delivery (No. RR-1718-RC). 
+Murray, C.C., Chu, A.G., 2015. The flying sidekick traveling salesman problem: Optimization of drone-assisted parcel delivery. Transportation Research Part C: 
+Emerging Technologies 54, 86–109. 
+Moore, A.M., 2019. Innovative scenarios for modeling intra-city freight delivery. Moore Transportation Research Interdisciplinary Perspectives 3. https://doi.org/ 
+10.1016/j.trip.2019.100024. 
+Murray, C.C., Raj, R., 2020. The multiple flying sidekicks traveling salesman problem: Parcel delivery with multiple drones. Transportation Research Part C: Emerging 
+Technologies 110, 368–398. 
+Otto, A., Agatz, N., Campbell, J., Golden, B., Pesch, E., 2018. Optimization approaches for civil applications of unmanned aerial vehicles (UAVs) or aerial drones: A 
+survey. Networks 72 (4), 411–458. 
+Poikonen, S., Golden, B., 2020. Multi-visit drone routing problem. Comput. Oper. Res. 113, 104–802. 
+Rotaru, C. and Todorov, M., 2017. Helicopter flight physics, DOI: 10.5772/intechopen.71516, https://www.intechopen.com/books/flight-physics-models-techniques- 
+and-technologies/helicopter-flight-physics. 
+Schermer, D., Moeini, M., Wendt, O., 2019. A hybrid VNS/Tabu search algorithm for solving the vehicle routing problem with drones and en route operations. 
+Comput. Oper. Res. 109, 134–158. 
+Shavarani, S.M., Nejad, M.G., Rismanchian, F., Izbirak, G., 2018. Application of hierarchical facility location problem for optimization of a drone delivery system: a 
+case study of Amazon prime air in the city of San Francisco. The International Journal of Advanced Manufacturing Technology 95 (9–12), 3141–3153. 
+Stolaroff, J.K., Samaras, C., O’Neill, E.R., Lubers, A., Mitchell, A.S., Ceperley, D., 2018. Energy use and life cycle greenhouse gas emissions of drones for commercial 
+package delivery. Nat. Commun. 9 (1), 409. 
+Swoop Aero, 2019. Drones for medical deliveries: the value of using technology for good. Retrieved January 23rd, 2020 from: https://swoop.aero/2019/10/21/ 
+drones-technology-for-good/. 
+Troudi, A., Addouche, S.A., Dellagi, S., Mhamedi, A., 2018. Sizing of the drone delivery fleet considering energy autonomy. Sustainability 10 (9), 3344. 
+Tseng, C-M., Chau, C-K., Elbassioni, K. and Khonji, M., 2017a. Flight Tour Planning with recharging optimization for battery-operated autonomous drones, 29 March 
+2017, https://pdfs.semanticscholar.org/76d2/307395999118ca3fb406c1d95e337bf3953b.pdf. 
+Tseng, C-M., Chau, C-K., Elbassioni, K. and Khonji, M., 2017b. Autonomous recharging and flight mission planning for battery-operated autonomous drones, 12 
+September 2017, https://arxiv.org/pdf/1703.10049.pdf. 
+Tseng, C-M., 2020. Personal communication , January 22 and 25, 2020. 
+U.S. Department of Energy, 2019. FY2018 Energy Efficient Mobility Systems Annual Progress Report. United States Department of Energy, Office of Energy Efficiency 
+and Renewable Energy, Vehicle Technologies Office, doi:10.2172/1525359. 
+U.S. Department of Energy, 2020. FY2019 Energy Efficient Mobility Systems Annual Progress Report. United States Department of Energy, Office of Energy Efficiency 
+and Renewable Energy, Vehicle Technologies Office, doi:10.2172/1525359. 
+Wu, F., Yang, D., Xiao, L., Cuthbert, L., 2019. Energy consumption and completion time tradeoff in rotary-wing UAV enabled WPCN. IEEE Access 7, 79617–79635. 
+https://doi.org/10.1109/ACCESS.2019.2922651. 
+Xu, J., 2017. Design perspectives on delivery drones. RAND. 
+Zeng, Y., Zhang, R., 2017. Energy-efficient UAV communication with trajectory optimization. IEEE Trans. Wireless Commun. 16 (6), 3747–3760. 
+Zeng, Y., Xu, J., Zhang, R., 2019. Energy minimization for wireless communication with rotary-wing UAV. IEEE Trans. Wireless Commun. 18 (4), 3747–3760. 
+J. Zhang et al.                                                                                                                                                                                                          
+
+--- PAGE 24 ---
+Update
+Transportation Research Part D
+Volume 115, Issue , February 2023, Page 
+ https://doi.org/10.1016/j.trd.2023.103609DOI:
+
+--- PAGE 25 ---
+Transportation Research Part D 115 (2023) 103609
+Available online 11 January 2023
+1361-9209/© 2023 Elsevier Ltd. All rights reserved.
+Corrigendum 
+Corrigendum to “ Energy consumption models for delivery drones: 
+A comparison and assessment ” [Transp. Res. Part D: Transp. 
+Environ. 90 (2021) 102668] 
+Juan Zhang
+*
+, James F. Campbell, Donald C. Sweeney II, Andrea C. Hupman 
+College of Business Administration, University of Missouri-St. Louis, 63121, USA 
+The authors regret that the following corrections need to be made for this article, and apologize for any inconvenience caused. 
+However, it does not affect the results of the analyses or the conclusions from the original contribution. 
+The authors mistakenly interpreted the drone used in Kirschstein (2020) to have a body weight of 2 kg. The correct value is a body 
+weight of 12 kg. The following are the corrections for the weight and the associated energy consumption reported for the Kirschstein 
+(2020) drone. 
+In Section 3.3, the following sentence needs to be corrected: ‘Kirschstein (2020) provides analyses for delivery in an urban region 
+(comparing drones with diesel and electric trucks) with large octocopter drones ( m
+1 
++ m
+2 
+= 12 kg) that carry a 2.5 kg payload ( m
+3 
+=
+2.5 kg), travel at 22.2 m/s, have a flight radius of 9 km (and the trips include 5 min of hovering), power transfer efficiency η = 0 . 73, 
+battery charging efficiency η
+c 
+= 0 . 9 and P
+avio 
+= 100 J/s (as in D ’ Andrea (2014)). For this drone, the constants in eq.(20) are: κ = 1 . 15, 
+κ
+2 
+= 0.502 and κ
+3 
+= 0 . 118; and the loaded Epm = 131 . 5 J/m ’ . The value for the large octocopter drones should be m
+1 
++ m
+2 
+= 22 kg. The 
+value for loaded Epm should be Epm = 225.8 J/m. 
+In Table 3a, the entry in column 6 (heading “ m
+1 
++ m
+2 
+(kg) ” ) for Kirschstein (2020) should be 22 instead of 12. 
+In Table 3b, the entry in column 3 (heading “ Epm (J/m) ” ) for Kirschstein (2020) should be 213.9 instead of 127.2, and the entry in 
+column 5 (heading “ Body Weight (kg) ” ) should be 12 instead of 2. 
+In Fig. 3 , the energy consumption per meter of point K-8-L should be 208.9 instead of 117.6, so the correct figure is shown below. 
+In Section 4.1, the following sentence should be corrected: ‘The next four rows for Kirschstein (2020) show a very small increase 
+(3.4%) in Epm from including avionics, a very large increase (129%) due to including strong winds of 45 km/hr, and a substantial 
+increase (70.1%) by including both moderate winds (10 km/hr) and energy use for a complete flight profile ’ . The correct sentence is: 
+‘The next four rows for Kirschstein (2020) show a very small increase ( 2.4% ) in Epm from including avionics, a very large increase 
+( 134% ) due to including strong winds of 45 km/hr, and a moderate increase ( 22.4% ) by including both moderate winds (10 km/hr) 
+and energy use for a complete flight profile ’ . 
+In Table 4 , the entry in column 4 (heading “ m
+1 
++ m
+2 
+(kg) ” ) for Kirschstein (2020) should be 22 instead of 12; the entry in column 8 
+(heading “ Epm (J/m) ” ) should be 208.9 instead of 127.2 for Baseline, 213.9 instead of 131.5 for Avionics, 489.2 instead of 300.6 for 
+Wind (45 km/h) and avionics, and 255.7 instead of 216.4 for a complete flight profile with wind (10 km/h) and avionics; the entry in 
+column 9 (heading “ % Epm increase to baseline ” ) should be 2.4% , 134% , and 22.4% , instead of 3.4%, 129%, and 70.1%, respectively. 
+(Since Table 4 has more than one number to correct, we show the corrected entries for Kirschstein (2020) as below. 
+The authors would like to apologize for any inconvenience caused. 
+DOI of original article: https://doi.org/10.1016/j.trd.2020.102668 . 
+* Corresponding author. 
+E-mail addresses: jzmq3@mail.umsl.edu (J. Zhang), campbell@umsl.edu (J.F. Campbell), sweeneyd@umsl.edu (D.C. Sweeney), hupmana@umsl. 
+edu (A.C. Hupman).  
+Contents lists available at ScienceDirect 
+Transportation Research Part D 
+journal homepag e: www.el sevier.com/loc ate/trd 
+https://doi.org/10.1016/j.trd.2023.103609    
+
+--- PAGE 26 ---
+Transportation Research Part D 115 (2023) 103609
+2
+Fig. 3. Epm Results from baseline models in Tables 3a and 3b.  
+J. Zhang et al.                                                                                                                                                                                                          
+
+--- PAGE 27 ---
+Transportation Research Part D 115 (2023) 103609
+3
+Table 4 
+Key drone energy models with additional conditions.  
+ID Reference Additional conditions to baseline m
+1 
++ m
+2 
+(kg) Payload
+1 
+(kg) Airspeed υ
+a 
+(m/s) Range
+2 
+(km) Epm (J/m) % Epm increase to baseline 
+K-8-L Kirschstein (2020) Baseline 22 1.25
+1 
+22.2 9  208.9 – 
+Avionics  213.9 2.4% 
+Wind (45 km/h), avionics  489.2 134% 
+A complete flight profile with wind (10 km/h) & avionics  255.7 22.4%  
+J. Zhang et al.                                                                                                                                                                                                          

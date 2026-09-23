@@ -1,0 +1,376 @@
+"""Plot O01/S001--S015 on the official DEM and extract O01 -> S001.
+
+Run from any directory with::
+
+    python -X utf8 "code/q1/真实地形刨面图"
+
+Outputs are written to ``output/figures``, ``output/tables`` and
+``output/results``.  The original competition data are only read.
+"""
+
+from __future__ import annotations
+
+import csv
+import json
+import math
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.colors import LightSource
+from openpyxl import load_workbook
+from scipy.interpolate import RegularGridInterpolator
+from scipy.io import loadmat
+
+
+ROOT = Path(__file__).resolve().parents[2]
+BASE_DATA = ROOT / "D题" / "数据"
+SITE_XLSX = BASE_DATA / "无人机应急物资运输基础数据" / "调度中心与服务区.xlsx"
+DEM_MAT = (
+    BASE_DATA
+    / "镇龙乡地理空间数据"
+    / "镇龙乡及周边地理数据"
+    / "数字高程模型数据（DEM）"
+    / "镇龙乡及周边30米DEM.mat"
+)
+
+FIGURE_DIR = ROOT / "output" / "figures"
+TABLE_DIR = ROOT / "output" / "tables"
+RESULT_DIR = ROOT / "output" / "results"
+
+EARTH_RADIUS_M = 6_371_008.8
+TARGET_SAMPLE_SPACING_M = 30.0
+
+
+def configure_plot_style() -> None:
+    """Use an installed Chinese font and publication-friendly defaults."""
+    from matplotlib import font_manager
+
+    candidates = [
+        "Microsoft YaHei",
+        "SimHei",
+        "Noto Sans CJK SC",
+        "Source Han Sans SC",
+        "Arial Unicode MS",
+    ]
+    installed = {font.name for font in font_manager.fontManager.ttflist}
+    chosen = next((font for font in candidates if font in installed), "DejaVu Sans")
+    plt.rcParams.update(
+        {
+            "font.family": "sans-serif",
+            "font.sans-serif": [chosen, "DejaVu Sans"],
+            "axes.unicode_minus": False,
+            "figure.dpi": 130,
+            "savefig.dpi": 300,
+            "savefig.bbox": "tight",
+            "axes.grid": True,
+            "grid.alpha": 0.25,
+        }
+    )
+
+
+def load_sites(path: Path) -> list[dict[str, float | str]]:
+    """Read O01 and the 15 service areas without relying on sheet text."""
+    if not path.exists():
+        raise FileNotFoundError(f"找不到点位工作簿: {path}")
+    sheet = load_workbook(path, data_only=True, read_only=True).active
+    sites: list[dict[str, float | str]] = []
+    for row in sheet.iter_rows(values_only=True):
+        code = row[0]
+        if not isinstance(code, str) or not (code == "O01" or code.startswith("S")):
+            continue
+        if row[2] is None or row[3] is None:
+            continue
+        sites.append(
+            {
+                "code": code,
+                "name": str(row[1] or ""),
+                "longitude": float(row[2]),
+                "latitude": float(row[3]),
+                "reported_elevation_m": float(row[4]) if row[4] is not None else math.nan,
+            }
+        )
+    expected = {"O01", *(f"S{i:03d}" for i in range(1, 16))}
+    found = {str(site["code"]) for site in sites}
+    if found != expected:
+        raise ValueError(f"点位编号不完整; 缺少={sorted(expected-found)}, 多出={sorted(found-expected)}")
+    return sites
+
+
+def load_dem(path: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray, int]:
+    """Load the official MAT mirror of the 30 m GeoTIFF."""
+    if not path.exists():
+        raise FileNotFoundError(f"找不到 DEM: {path}")
+    raw = loadmat(path)
+    dem = np.asarray(raw["dem"], dtype=float)
+    longitude = np.asarray(raw["longitude"], dtype=float).ravel()
+    latitude = np.asarray(raw["latitude"], dtype=float).ravel()
+    nodata = float(np.asarray(raw["nodata"]).item())
+    epsg = int(np.asarray(raw["epsg_code"]).item())
+    dem[np.isclose(dem, nodata)] = np.nan
+    if dem.shape != (latitude.size, longitude.size):
+        raise ValueError("DEM 维度与经纬度坐标轴不匹配")
+    return dem, longitude, latitude, epsg
+
+
+def haversine_m(lon1: float, lat1: float, lon2: float, lat2: float) -> float:
+    """Great-circle distance; sufficient for this short local segment."""
+    phi1, phi2 = np.radians([lat1, lat2])
+    delta_phi = np.radians(lat2 - lat1)
+    delta_lambda = np.radians(lon2 - lon1)
+    a = np.sin(delta_phi / 2.0) ** 2 + np.cos(phi1) * np.cos(phi2) * np.sin(delta_lambda / 2.0) ** 2
+    return float(2.0 * EARTH_RADIUS_M * np.arctan2(np.sqrt(a), np.sqrt(1.0 - a)))
+
+
+def dem_interpolator(
+    dem: np.ndarray, longitude: np.ndarray, latitude: np.ndarray
+) -> RegularGridInterpolator:
+    """Build a bilinear interpolator with both axes in ascending order."""
+    if latitude[0] > latitude[-1]:
+        latitude = latitude[::-1]
+        dem = dem[::-1, :]
+    if longitude[0] > longitude[-1]:
+        longitude = longitude[::-1]
+        dem = dem[:, ::-1]
+    return RegularGridInterpolator(
+        (latitude, longitude), dem, method="linear", bounds_error=True
+    )
+
+
+def extract_profile(
+    start: dict[str, float | str],
+    end: dict[str, float | str],
+    interpolator: RegularGridInterpolator,
+) -> dict[str, np.ndarray | float | int]:
+    """Sample the straight ground projection at no more than 30 m spacing."""
+    lon1, lat1 = float(start["longitude"]), float(start["latitude"])
+    lon2, lat2 = float(end["longitude"]), float(end["latitude"])
+    horizontal_m = haversine_m(lon1, lat1, lon2, lat2)
+    sample_count = max(2, int(math.ceil(horizontal_m / TARGET_SAMPLE_SPACING_M)) + 1)
+    fraction = np.linspace(0.0, 1.0, sample_count)
+    longitude = lon1 + fraction * (lon2 - lon1)
+    latitude = lat1 + fraction * (lat2 - lat1)
+    elevation = interpolator(np.column_stack((latitude, longitude)))
+    distance_m = fraction * horizontal_m
+    step_horizontal = np.diff(distance_m)
+    step_vertical = np.diff(elevation)
+    surface_distance_m = float(np.sum(np.hypot(step_horizontal, step_vertical)))
+    slope = np.divide(
+        step_vertical,
+        step_horizontal,
+        out=np.zeros_like(step_vertical),
+        where=step_horizontal > 0,
+    )
+    return {
+        "fraction": fraction,
+        "longitude": longitude,
+        "latitude": latitude,
+        "distance_m": distance_m,
+        "elevation_m": elevation,
+        "horizontal_distance_m": horizontal_m,
+        "surface_distance_m": surface_distance_m,
+        "sample_count": sample_count,
+        "max_abs_segment_slope_percent": float(np.max(np.abs(slope)) * 100.0),
+    }
+
+
+def add_scale_bar(ax: plt.Axes, longitude: np.ndarray, latitude: np.ndarray) -> None:
+    """Add an approximate 5 km scale bar at the map's lower-left."""
+    lon_span = float(longitude[-1] - longitude[0])
+    lat_span = float(latitude.max() - latitude.min())
+    x0 = float(longitude[0] + 0.055 * lon_span)
+    y0 = float(latitude.min() + 0.055 * lat_span)
+    length_km = 5.0
+    length_deg = length_km / (111.32 * math.cos(math.radians(y0)))
+    ax.plot([x0, x0 + length_deg], [y0, y0], color="black", lw=3, solid_capstyle="butt")
+    ax.plot([x0, x0], [y0 - 0.002, y0 + 0.002], color="black", lw=1)
+    ax.plot([x0 + length_deg, x0 + length_deg], [y0 - 0.002, y0 + 0.002], color="black", lw=1)
+    ax.text(x0 + length_deg / 2, y0 + 0.004, f"{length_km:g} km", ha="center", va="bottom", fontsize=8)
+
+
+def plot_dem_sites(
+    dem: np.ndarray,
+    longitude: np.ndarray,
+    latitude: np.ndarray,
+    sites: list[dict[str, float | str]],
+    profile: dict[str, np.ndarray | float | int],
+    epsg: int,
+    output_path: Path,
+) -> None:
+    """Draw shaded DEM, all sites, and the first profile trace."""
+    fig, ax = plt.subplots(figsize=(9.2, 7.4))
+    extent = [longitude.min(), longitude.max(), latitude.min(), latitude.max()]
+    valid = dem[np.isfinite(dem)]
+    shaded = LightSource(azdeg=315, altdeg=45).shade(
+        dem, cmap=plt.get_cmap("terrain"), vert_exag=1.0, blend_mode="soft",
+        vmin=float(np.nanpercentile(valid, 1)), vmax=float(np.nanpercentile(valid, 99)),
+    )
+    ax.imshow(shaded, extent=extent, origin="upper", aspect="equal", zorder=0)
+    elevation_layer = ax.imshow(
+        dem, extent=extent, origin="upper", cmap="terrain", alpha=0.26,
+        vmin=float(np.nanpercentile(valid, 1)), vmax=float(np.nanpercentile(valid, 99)), zorder=1,
+    )
+    center = next(site for site in sites if site["code"] == "O01")
+    services = [site for site in sites if str(site["code"]).startswith("S")]
+    ax.scatter(
+        [float(site["longitude"]) for site in services],
+        [float(site["latitude"]) for site in services],
+        marker="o", s=34, color="#00B7C7", edgecolor="white", linewidth=0.8,
+        label="服务区 S001–S015", zorder=4,
+    )
+    ax.scatter(
+        [float(center["longitude"])], [float(center["latitude"])], marker="*", s=170,
+        color="#E53935", edgecolor="white", linewidth=0.9, label="调度中心 O01", zorder=5,
+    )
+    ax.plot(
+        np.asarray(profile["longitude"]), np.asarray(profile["latitude"]),
+        color="#FFEB3B", lw=2.0, linestyle="--", label="剖面线 O01→S001", zorder=3,
+    )
+    for site in sites:
+        ax.annotate(
+            str(site["code"]),
+            (float(site["longitude"]), float(site["latitude"])),
+            xytext=(4, 4), textcoords="offset points", fontsize=7.3, color="#111111",
+            bbox={"boxstyle": "round,pad=0.13", "fc": "white", "ec": "none", "alpha": 0.72},
+            zorder=6,
+        )
+    add_scale_bar(ax, longitude, latitude)
+    ax.text(0.955, 0.955, "N\n↑", transform=ax.transAxes, ha="center", va="top", fontsize=11, weight="bold")
+    colorbar = fig.colorbar(elevation_layer, ax=ax, fraction=0.033, pad=0.025)
+    colorbar.set_label("DEM 高程 (m)")
+    ax.set_title("镇龙乡 DEM 上的调度中心与 15 个服务区")
+    ax.set_xlabel("经度 (°E)")
+    ax.set_ylabel("纬度 (°N)")
+    ax.text(0.01, 0.01, f"Copernicus DEM GLO-30  |  EPSG:{epsg}", transform=ax.transAxes, fontsize=7.5,
+            color="#333333", ha="left", va="bottom")
+    ax.legend(loc="upper left", frameon=True, facecolor="white", framealpha=0.9)
+    ax.set_xlim(float(longitude.min()), float(longitude.max()))
+    ax.set_ylim(float(latitude.min()), float(latitude.max()))
+    fig.savefig(output_path)
+    plt.close(fig)
+
+
+def plot_profile(profile: dict[str, np.ndarray | float | int], output_path: Path) -> None:
+    """Plot the first real-terrain profile, O01 -> S001."""
+    distance_km = np.asarray(profile["distance_m"]) / 1000.0
+    elevation = np.asarray(profile["elevation_m"])
+    fig, ax = plt.subplots(figsize=(9.0, 4.8))
+    baseline = float(np.floor(np.nanmin(elevation) / 10.0) * 10.0 - 10.0)
+    ax.fill_between(distance_km, baseline, elevation, color="#8D6E63", alpha=0.30)
+    ax.plot(distance_km, elevation, color="#4E342E", lw=2.0)
+    ax.scatter([distance_km[0], distance_km[-1]], [elevation[0], elevation[-1]],
+               color=["#E53935", "#00A8B5"], s=45, zorder=4)
+    ax.annotate(f"O01\n{elevation[0]:.1f} m", (distance_km[0], elevation[0]),
+                xytext=(8, 11), textcoords="offset points", ha="left", fontsize=9)
+    ax.annotate(f"S001\n{elevation[-1]:.1f} m", (distance_km[-1], elevation[-1]),
+                xytext=(-8, 11), textcoords="offset points", ha="right", fontsize=9)
+    peak_index = int(np.nanargmax(elevation))
+    ax.scatter([distance_km[peak_index]], [elevation[peak_index]], color="#F9A825", s=36, zorder=4)
+    ax.annotate(
+        f"剖面最高点 {elevation[peak_index]:.1f} m",
+        (distance_km[peak_index], elevation[peak_index]), xytext=(0, 16),
+        textcoords="offset points", ha="center", fontsize=8.5,
+    )
+    ax.set_xlim(0.0, float(distance_km[-1]))
+    ax.set_ylim(baseline, float(np.nanmax(elevation) + 25.0))
+    ax.set_xlabel("沿 O01→S001 的水平距离 (km)")
+    ax.set_ylabel("DEM 高程 (m)")
+    ax.set_title("O01→S001 真实地形剖面（30 m DEM 双线性采样）")
+    ax.text(
+        0.99, 0.03,
+        f"水平距离 {float(profile['horizontal_distance_m'])/1000:.3f} km  |  "
+        f"地表折线长 {float(profile['surface_distance_m'])/1000:.3f} km  |  "
+        f"采样点 {int(profile['sample_count'])} 个",
+        transform=ax.transAxes, ha="right", va="bottom", fontsize=8.2,
+        bbox={"boxstyle": "round,pad=0.25", "fc": "white", "ec": "#BBBBBB", "alpha": 0.88},
+    )
+    fig.savefig(output_path)
+    plt.close(fig)
+
+
+def write_profile_csv(profile: dict[str, np.ndarray | float | int], output_path: Path) -> None:
+    columns = ["sample_id", "fraction", "longitude_deg", "latitude_deg", "distance_m", "dem_elevation_m"]
+    arrays = [
+        np.asarray(profile["fraction"]), np.asarray(profile["longitude"]),
+        np.asarray(profile["latitude"]), np.asarray(profile["distance_m"]),
+        np.asarray(profile["elevation_m"]),
+    ]
+    with output_path.open("w", newline="", encoding="utf-8-sig") as stream:
+        writer = csv.writer(stream)
+        writer.writerow(columns)
+        for index, values in enumerate(zip(*arrays)):
+            writer.writerow([index, *(f"{float(value):.8f}" for value in values)])
+
+
+def main() -> None:
+    for directory in (FIGURE_DIR, TABLE_DIR, RESULT_DIR):
+        directory.mkdir(parents=True, exist_ok=True)
+    configure_plot_style()
+    sites = load_sites(SITE_XLSX)
+    dem, longitude, latitude, epsg = load_dem(DEM_MAT)
+    interpolator = dem_interpolator(dem, longitude, latitude)
+
+    for site in sites:
+        lon, lat = float(site["longitude"]), float(site["latitude"])
+        if not (longitude.min() <= lon <= longitude.max() and latitude.min() <= lat <= latitude.max()):
+            raise ValueError(f"{site['code']} 不在 DEM 范围内")
+        site["dem_elevation_m"] = float(interpolator([[lat, lon]])[0])
+
+    start = next(site for site in sites if site["code"] == "O01")
+    end = next(site for site in sites if site["code"] == "S001")
+    profile = extract_profile(start, end, interpolator)
+
+    map_path = FIGURE_DIR / "q1_dem_O01_S001-S015.png"
+    profile_path = FIGURE_DIR / "q1_profile_O01-S001.png"
+    table_path = TABLE_DIR / "q1_profile_O01-S001.csv"
+    summary_path = RESULT_DIR / "q1_profile_O01-S001_summary.json"
+
+    plot_dem_sites(dem, longitude, latitude, sites, profile, epsg, map_path)
+    plot_profile(profile, profile_path)
+    write_profile_csv(profile, table_path)
+
+    elevation = np.asarray(profile["elevation_m"])
+    peak_index = int(np.nanargmax(elevation))
+    trough_index = int(np.nanargmin(elevation))
+    summary = {
+        "route": "O01->S001",
+        "dem_source": "Copernicus DEM GLO-30 (official MAT mirror)",
+        "crs": f"EPSG:{epsg}",
+        "interpolation": "bilinear",
+        "target_sampling_spacing_m": TARGET_SAMPLE_SPACING_M,
+        "sample_count": int(profile["sample_count"]),
+        "actual_sampling_spacing_m": float(profile["horizontal_distance_m"]) / (int(profile["sample_count"]) - 1),
+        "horizontal_distance_m": float(profile["horizontal_distance_m"]),
+        "terrain_surface_polyline_length_m": float(profile["surface_distance_m"]),
+        "start_dem_elevation_m": float(elevation[0]),
+        "end_dem_elevation_m": float(elevation[-1]),
+        "net_elevation_change_m": float(elevation[-1] - elevation[0]),
+        "minimum_elevation_m": float(elevation[trough_index]),
+        "minimum_at_distance_m": float(np.asarray(profile["distance_m"])[trough_index]),
+        "maximum_elevation_m": float(elevation[peak_index]),
+        "maximum_at_distance_m": float(np.asarray(profile["distance_m"])[peak_index]),
+        "total_ascent_m": float(np.sum(np.clip(np.diff(elevation), 0.0, None))),
+        "total_descent_m": float(np.sum(np.clip(-np.diff(elevation), 0.0, None))),
+        "maximum_absolute_segment_slope_percent": float(profile["max_abs_segment_slope_percent"]),
+        "sites": sites,
+        "outputs": {
+            "map_figure": str(map_path.relative_to(ROOT)),
+            "profile_figure": str(profile_path.relative_to(ROOT)),
+            "profile_samples": str(table_path.relative_to(ROOT)),
+        },
+    }
+    summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    print(f"[完成] DEM 点位图: {map_path.relative_to(ROOT)}")
+    print(f"[完成] O01->S001 剖面图: {profile_path.relative_to(ROOT)}")
+    print(f"[完成] 剖面采样表: {table_path.relative_to(ROOT)}")
+    print(f"[完成] 关键指标: {summary_path.relative_to(ROOT)}")
+    print(
+        f"水平距离={summary['horizontal_distance_m']/1000:.3f} km, "
+        f"高程={summary['start_dem_elevation_m']:.1f}->{summary['end_dem_elevation_m']:.1f} m, "
+        f"剖面范围={summary['minimum_elevation_m']:.1f}-{summary['maximum_elevation_m']:.1f} m"
+    )
+
+
+if __name__ == "__main__":
+    main()
