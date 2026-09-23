@@ -1,0 +1,387 @@
+"""问题一货箱组批优化总体代码。
+
+算法：解析能耗 + 可行子集生成 + 精确字典序子集划分。
+字典序优先级：往返架次数 -> 完整运输能耗 -> 累计作业时间。
+
+注意：题面等效航程中的载荷比例为 3/2 次幂，而不是线性插值。
+"""
+
+from __future__ import annotations
+
+import json
+from collections import Counter
+from functools import lru_cache
+from pathlib import Path
+
+from openpyxl import load_workbook
+
+
+PROJECT_DIR = Path(r"C:\Users\admin\Documents\Codex\2026-09-23\ni")
+SAFE_LOAD_FILE = Path(r"D:\pycharm\test2\pythonProject2\最大安全载荷计算结果.xlsx")
+BASE_DIR = Path(
+    r"C:\Users\admin\Desktop\第二十三届中国研究生数学建模竞赛 - 中文题目\中文题目\D题\数据\无人机应急物资运输基础数据"
+)
+DEMAND_FILE = BASE_DIR / "物资需求与配送时限.xlsx"
+DRONE_FILE = BASE_DIR / "运输无人机数据.xlsx"
+OUTPUT_JSON = PROJECT_DIR / "work" / "cargo_batching_three_objective_solution.json"
+PREVIOUS_JSON = PROJECT_DIR / "work" / "cargo_batching_solution.json"
+
+G0 = 9.81
+JOULES_PER_KWH = 3.6e6
+
+
+def load_safe_loads_and_routes():
+    wb = load_workbook(SAFE_LOAD_FILE, data_only=True, read_only=True)
+    ws_matrix = wb["最大安全载荷矩阵"]
+    models = list(next(ws_matrix.iter_rows(min_row=1, max_row=1, values_only=True))[1:4])
+    safe_loads = {}
+    for row in ws_matrix.iter_rows(min_row=2, values_only=True):
+        if row[0]:
+            safe_loads[str(row[0])] = {str(models[k]): float(row[k + 1]) for k in range(3)}
+
+    ws_detail = wb["详细计算结果"]
+    routes = {}
+    for row in ws_detail.iter_rows(min_row=2, values_only=True):
+        if row[0] and str(row[0]) not in routes:
+            routes[str(row[0])] = {
+                "distance_m": float(row[2]) * 1000.0,
+                "outbound_climb_m": float(row[3]),
+                "return_climb_m": float(row[4]),
+            }
+    return safe_loads, routes
+
+
+def load_drone_parameters():
+    ws = load_workbook(DRONE_FILE, data_only=True, read_only=True).active
+    params = {}
+    for row in ws.iter_rows(values_only=True):
+        if row[0] in {"A", "B", "C"} and isinstance(row[4], (int, float)):
+            params[str(row[0])] = {
+                "empty_mass_kg": float(row[2]),
+                "rated_payload_kg": float(row[3]),
+                "volume_capacity_m3": float(row[4]),
+                "cruise_speed_mps": float(row[5]),
+                "empty_range_m": float(row[6]),
+                "full_range_m": float(row[7]),
+                "usable_energy_kwh": float(row[8]),
+                "reserve_fraction": float(row[9]) / 100.0,
+                "prep_s": float(row[10]),
+                "load_per_box_s": float(row[11]),
+                "handover_base_s": float(row[12]),
+                "handover_per_box_s": float(row[13]),
+                "climb_speed_mps": float(row[14]),
+                "descent_speed_mps": float(row[15]),
+                "climb_efficiency": float(row[16]),
+            }
+        if len(params) == 3:
+            break
+    return params
+
+
+def load_boxes():
+    ws = load_workbook(DEMAND_FILE, data_only=True, read_only=True)["逐箱货箱清单"]
+    result = {}
+    for row in ws.iter_rows(min_row=2, values_only=True):
+        if not row[0]:
+            continue
+        box = {
+            "box_id": str(row[0]),
+            "service": str(row[1]),
+            "material": str(row[2]),
+            "mass_kg": float(row[3]),
+            "volume_m3": float(row[4]),
+            "first_required": str(row[5]) == "是",
+            "first_deadline_s": None if row[6] is None else float(row[6]),
+            "expected_s": float(row[7]),
+            "priority": float(row[8]),
+        }
+        result.setdefault(box["service"], []).append(box)
+    return result
+
+
+def equivalent_range_m(model: dict, payload_kg: float) -> float:
+    ratio = payload_kg / model["rated_payload_kg"]
+    return model["empty_range_m"] - (
+        model["empty_range_m"] - model["full_range_m"]
+    ) * ratio ** 1.5
+
+
+def batch_energy_kwh(route: dict, model: dict, payload_kg: float) -> float:
+    loaded_range = equivalent_range_m(model, payload_kg)
+    outbound_horizontal = model["usable_energy_kwh"] * route["distance_m"] / loaded_range
+    return_horizontal = model["usable_energy_kwh"] * route["distance_m"] / model["empty_range_m"]
+    outbound_climb = (
+        (model["empty_mass_kg"] + payload_kg)
+        * G0
+        * route["outbound_climb_m"]
+        / (model["climb_efficiency"] * JOULES_PER_KWH)
+    )
+    return_climb = (
+        model["empty_mass_kg"]
+        * G0
+        * route["return_climb_m"]
+        / (model["climb_efficiency"] * JOULES_PER_KWH)
+    )
+    return outbound_horizontal + return_horizontal + outbound_climb + return_climb
+
+
+def batch_operation_time_s(route: dict, model: dict, box_count: int) -> float:
+    outbound_flight = (
+        route["outbound_climb_m"] / model["climb_speed_mps"]
+        + route["distance_m"] / model["cruise_speed_mps"]
+        + route["return_climb_m"] / model["descent_speed_mps"]
+    )
+    return_flight = (
+        route["return_climb_m"] / model["climb_speed_mps"]
+        + route["distance_m"] / model["cruise_speed_mps"]
+        + route["outbound_climb_m"] / model["descent_speed_mps"]
+    )
+    ground_operation = (
+        model["prep_s"]
+        + box_count * model["load_per_box_s"]
+        + model["handover_base_s"]
+        + box_count * model["handover_per_box_s"]
+    )
+    return outbound_flight + return_flight + ground_operation
+
+
+def better(lhs, rhs, tol=1e-10):
+    """Strict lexicographic comparison for (sorties, energy, time, tie-break)."""
+    if rhs is None:
+        return True
+    if lhs[0] != rhs[0]:
+        return lhs[0] < rhs[0]
+    if abs(lhs[1] - rhs[1]) > tol:
+        return lhs[1] < rhs[1]
+    if abs(lhs[2] - rhs[2]) > tol:
+        return lhs[2] < rhs[2]
+    return lhs[3] < rhs[3]
+
+
+def solve_service(service, boxes, safe_loads, routes, drone_params):
+    n = len(boxes)
+    full_mask = (1 << n) - 1
+    mandatory_mask = sum(1 << i for i, b in enumerate(boxes) if b["first_required"])
+    mass = [0.0] * (1 << n)
+    volume = [0.0] * (1 << n)
+    count = [0] * (1 << n)
+    urgency = [0.0] * (1 << n)
+    for mask in range(1, 1 << n):
+        bit = mask & -mask
+        i = bit.bit_length() - 1
+        prev = mask ^ bit
+        mass[mask] = mass[prev] + boxes[i]["mass_kg"]
+        volume[mask] = volume[prev] + boxes[i]["volume_m3"]
+        count[mask] = count[prev] + 1
+        urgency[mask] = urgency[prev] + boxes[i]["priority"] * 3600.0 / boxes[i]["expected_s"]
+
+    candidates = {}
+    for mask in range(1, 1 << n):
+        options = []
+        for model_id, model in drone_params.items():
+            if (
+                mass[mask] <= safe_loads[service][model_id] + 1e-9
+                and volume[mask] <= model["volume_capacity_m3"] + 1e-12
+            ):
+                energy = batch_energy_kwh(routes[service], model, mass[mask])
+                time_s = batch_operation_time_s(routes[service], model, count[mask])
+                options.append(
+                    {
+                        "model": model_id,
+                        "energy_kwh": energy,
+                        "time_s": time_s,
+                        "safe_mass_kg": safe_loads[service][model_id],
+                        "volume_capacity_m3": model["volume_capacity_m3"],
+                    }
+                )
+        if options:
+            candidates[mask] = options
+
+    @lru_cache(maxsize=None)
+    def partition(mask):
+        if mask == 0:
+            return (0, 0.0, 0.0, 0.0), ()
+        anchor = mask & -mask
+        best_obj, best_batches = None, None
+        sub = mask
+        while sub:
+            if sub & anchor and sub in candidates:
+                rest_obj, rest_batches = partition(mask ^ sub)
+                for option in candidates[sub]:
+                    obj = (
+                        rest_obj[0] + 1,
+                        rest_obj[1] + option["energy_kwh"],
+                        rest_obj[2] + option["time_s"],
+                        rest_obj[3],
+                    )
+                    if better(obj, best_obj):
+                        best_obj = obj
+                        best_batches = ((sub, option),) + rest_batches
+            sub = (sub - 1) & mask
+        if best_obj is None:
+            raise RuntimeError(f"No feasible partition for {service}: {mask}")
+        return best_obj, best_batches
+
+    best_obj, best_batches = None, None
+    for first_mask, options in candidates.items():
+        if (first_mask & mandatory_mask) != mandatory_mask:
+            continue
+        rest_obj, rest_batches = partition(full_mask ^ first_mask)
+        for option in options:
+            obj = (
+                rest_obj[0] + 1,
+                rest_obj[1] + option["energy_kwh"],
+                rest_obj[2] + option["time_s"],
+                -urgency[first_mask],
+            )
+            if better(obj, best_obj):
+                best_obj = obj
+                best_batches = ((first_mask, option),) + rest_batches
+
+    if best_batches is None:
+        raise RuntimeError(f"No first-batch-feasible solution for {service}")
+
+    first = best_batches[0]
+    rest = list(best_batches[1:])
+    rest.sort(
+        key=lambda item: (
+            min(boxes[i]["expected_s"] for i in range(n) if item[0] & (1 << i)),
+            -urgency[item[0]],
+        )
+    )
+    ordered = [first] + rest
+    batches = []
+    for batch_no, (mask, option) in enumerate(ordered, start=1):
+        selected = [boxes[i] for i in range(n) if mask & (1 << i)]
+        deadline_values = [b["first_deadline_s"] for b in selected if b["first_deadline_s"] is not None]
+        batches.append(
+            {
+                "service": service,
+                "batch_no": batch_no,
+                "model": option["model"],
+                "box_count": count[mask],
+                "mass_kg": round(mass[mask], 6),
+                "safe_mass_kg": round(option["safe_mass_kg"], 6),
+                "mass_utilization": mass[mask] / option["safe_mass_kg"],
+                "volume_m3": round(volume[mask], 6),
+                "volume_capacity_m3": option["volume_capacity_m3"],
+                "volume_utilization": volume[mask] / option["volume_capacity_m3"],
+                "energy_kwh": option["energy_kwh"],
+                "operation_time_s": option["time_s"],
+                "contains_all_first_required": (mask & mandatory_mask) == mandatory_mask,
+                "first_required_count": sum(b["first_required"] for b in selected),
+                "earliest_first_deadline_s": min(deadline_values) if deadline_values else None,
+                "earliest_expected_s": min(b["expected_s"] for b in selected),
+                "urgency_score": urgency[mask],
+                "box_ids": [b["box_id"] for b in selected],
+            }
+        )
+    return batches
+
+
+def main():
+    safe_loads, routes = load_safe_loads_and_routes()
+    drone_params = load_drone_parameters()
+    service_boxes = load_boxes()
+    all_batches, assignments = [], []
+
+    for service in sorted(service_boxes):
+        batches = solve_service(service, service_boxes[service], safe_loads, routes, drone_params)
+        all_batches.extend(batches)
+        mapping = {
+            box_id: (batch["batch_no"], batch["model"])
+            for batch in batches
+            for box_id in batch["box_ids"]
+        }
+        for box in service_boxes[service]:
+            batch_no, model = mapping[box["box_id"]]
+            assignments.append({**box, "batch_no": batch_no, "model": model})
+
+    source_ids = [b["box_id"] for boxes in service_boxes.values() for b in boxes]
+    assigned_ids = [b["box_id"] for b in assignments]
+    assert len(source_ids) == 80
+    assert Counter(source_ids) == Counter(assigned_ids)
+    assert all(v == 1 for v in Counter(assigned_ids).values())
+    assert all(b["mass_kg"] <= b["safe_mass_kg"] + 1e-9 for b in all_batches)
+    assert all(b["volume_m3"] <= b["volume_capacity_m3"] + 1e-12 for b in all_batches)
+    assert all(not a["first_required"] or a["batch_no"] == 1 for a in assignments)
+
+    model_counts = Counter(b["model"] for b in all_batches)
+    total_energy = sum(b["energy_kwh"] for b in all_batches)
+    total_time = sum(b["operation_time_s"] for b in all_batches)
+    comparison = None
+    if PREVIOUS_JSON.exists():
+        previous = json.loads(PREVIOUS_JSON.read_text(encoding="utf-8"))
+        previous_energy = 0.0
+        previous_time = 0.0
+        for batch in previous["batches"]:
+            previous_energy += batch_energy_kwh(
+                routes[batch["service"]], drone_params[batch["model"]], batch["mass_kg"]
+            )
+            previous_time += batch_operation_time_s(
+                routes[batch["service"]], drone_params[batch["model"]], batch["box_count"]
+            )
+        previous_model_counts = Counter(batch["model"] for batch in previous["batches"])
+        previous_first_models = {
+            batch["service"]: batch["model"]
+            for batch in previous["batches"]
+            if batch["batch_no"] == 1
+        }
+        current_first_models = {
+            batch["service"]: batch["model"]
+            for batch in all_batches
+            if batch["batch_no"] == 1
+        }
+        comparison = {
+            "previous_batch_count": previous["summary"]["batch_count"],
+            "previous_energy_kwh": previous_energy,
+            "previous_operation_time_s": previous_time,
+            "energy_reduction_fraction": (previous_energy - total_energy) / previous_energy,
+            "time_reduction_fraction": (previous_time - total_time) / previous_time,
+            "previous_model_batch_counts": dict(sorted(previous_model_counts.items())),
+            "current_model_batch_counts": dict(sorted(model_counts.items())),
+            "first_batch_model_changes": {
+                service: {
+                    "previous": previous_first_models[service],
+                    "current": current_first_models[service],
+                }
+                for service in sorted(current_first_models)
+                if previous_first_models.get(service) != current_first_models[service]
+            },
+        }
+    payload = {
+        "method": "Exact lexicographic subset DP: sorties -> energy -> cumulative operation time",
+        "objective_priority": ["sorties", "energy_kwh", "cumulative_operation_time_s"],
+        "summary": {
+            "service_count": len(service_boxes),
+            "box_count": len(assignments),
+            "batch_count": len(all_batches),
+            "total_energy_kwh": total_energy,
+            "total_operation_time_s": total_time,
+            "total_operation_time_h": total_time / 3600.0,
+            "model_batch_counts": dict(sorted(model_counts.items())),
+        },
+        "drone_parameters": drone_params,
+        "safe_loads_kg": safe_loads,
+        "routes": routes,
+        "comparison_to_previous": comparison,
+        "batches": all_batches,
+        "assignments": assignments,
+    }
+    OUTPUT_JSON.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(json.dumps(payload["summary"], ensure_ascii=False, indent=2))
+    if comparison is not None:
+        print("优化前后对比：")
+        print(json.dumps(comparison, ensure_ascii=False, indent=2))
+    for b in all_batches:
+        print(
+            f'{b["service"]}-第{b["batch_no"]}批 {b["model"]}型 '
+            f'{b["box_count"]}箱 {b["mass_kg"]:.1f}/{b["safe_mass_kg"]:.1f}kg '
+            f'{b["volume_m3"]:.3f}/{b["volume_capacity_m3"]:.3f}m3 '
+            f'E={b["energy_kwh"]:.4f}kWh T={b["operation_time_s"]:.1f}s'
+        )
+
+
+if __name__ == "__main__":
+    main()
+
