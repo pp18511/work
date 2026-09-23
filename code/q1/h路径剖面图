@@ -1,0 +1,250 @@
+from __future__ import annotations
+
+import argparse
+import csv
+import math
+from pathlib import Path
+
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib import font_manager
+from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
+from scipy.io import loadmat
+
+from plot_profile_o01_s001 import haversine_m, load_nodes, traverse_grid
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Plot DEM profiles from O01 to S001-S015.")
+    parser.add_argument("--root", type=Path, required=True, help="Root directory of problem D")
+    parser.add_argument("--out", type=Path, required=True, help="Output directory")
+    return parser.parse_args()
+
+
+def extract_profile(start: dict, end: dict, transform: np.ndarray, dem: np.ndarray, nodata: float) -> dict:
+    segments = traverse_grid(
+        start["lon"], start["lat"], end["lon"], end["lat"], transform, dem, nodata
+    )
+    total_m = haversine_m(start["lon"], start["lat"], end["lon"], end["lat"])
+    for seg in segments:
+        seg["distance_start_m"] = seg["t_start"] * total_m
+        seg["distance_end_m"] = seg["t_end"] * total_m
+
+    # Dense lookup independently verifies the maximum from exact cell traversal.
+    dense_t = np.linspace(0, 1, max(5000, len(segments) * 30))
+    dense_lon = start["lon"] + dense_t * (end["lon"] - start["lon"])
+    dense_lat = start["lat"] + dense_t * (end["lat"] - start["lat"])
+    a, _, c, _, e, f = [float(x) for x in transform]
+    cols = np.floor((dense_lon - c) / a).astype(int)
+    rows = np.floor((dense_lat - f) / e).astype(int)
+    dense_max = float(np.max(dem[rows, cols]))
+
+    max_seg = max(segments, key=lambda x: x["elevation_m"])
+    max_elevation = float(max_seg["elevation_m"])
+    if not math.isclose(max_elevation, dense_max, abs_tol=1e-6):
+        raise AssertionError(f"{end['id']}: traversal max {max_elevation} != dense max {dense_max}")
+
+    mid_km = np.array(
+        [0.5 * (seg["distance_start_m"] + seg["distance_end_m"]) / 1000 for seg in segments]
+    )
+    elevations = np.array([seg["elevation_m"] for seg in segments])
+    x_km = np.concatenate(([0.0], mid_km, [total_m / 1000]))
+    y_m = np.concatenate(([elevations[0]], elevations, [elevations[-1]]))
+    max_distance_km = 0.5 * (max_seg["distance_start_m"] + max_seg["distance_end_m"]) / 1000
+
+    return {
+        "service_id": end["id"],
+        "distance_m": total_m,
+        "segments": segments,
+        "x_km": x_km,
+        "y_m": y_m,
+        "max_seg": max_seg,
+        "max_distance_km": max_distance_km,
+        "max_elevation_m": max_elevation,
+        "cruise_altitude_m": max_elevation + 50.0,
+        "service_ground_m": end["elev"],
+        "service_work_m": end["elev"] + 30.0,
+    }
+
+
+def main() -> None:
+    args = parse_args()
+    root, out_dir = args.root, args.out
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    data_root = root / "数据"
+    dem_path = (
+        data_root
+        / "镇龙乡地理空间数据"
+        / "镇龙乡及周边地理数据"
+        / "数字高程模型数据（DEM）"
+        / "镇龙乡及周边30米DEM.mat"
+    )
+    nodes_path = data_root / "无人机应急物资运输基础数据" / "调度中心与服务区.xlsx"
+    mat = loadmat(dem_path)
+    dem = np.asarray(mat["dem"], dtype=float)
+    transform = np.asarray(mat["transform"], dtype=float).ravel()
+    nodata = float(np.asarray(mat["nodata"]).ravel()[0])
+    nodes = load_nodes(nodes_path)
+    start = nodes["O01"]
+
+    service_ids = [f"S{i:03d}" for i in range(1, 16)]
+    profiles = [extract_profile(start, nodes[sid], transform, dem, nodata) for sid in service_ids]
+
+    chinese_font = Path(r"C:\Windows\Fonts\msyh.ttc")
+    font_manager.fontManager.addfont(chinese_font)
+    family = font_manager.FontProperties(fname=chinese_font).get_name()
+    mpl.rcParams.update(
+        {
+            "font.family": "sans-serif",
+            "font.sans-serif": [family],
+            "axes.unicode_minus": False,
+            "svg.fonttype": "path",
+            "pdf.fonttype": 42,
+            "font.size": 8.5,
+            "axes.linewidth": 0.75,
+            "axes.spines.right": True,
+            "axes.spines.top": True,
+        }
+    )
+
+    terrain_line = "#0D6D7C"
+    terrain_fill = "#BBD7D6"
+    cruise_color = "#D7653D"
+    max_color = "#173F5F"
+
+    fig, axes = plt.subplots(5, 3, figsize=(15.0, 17.2))
+    for ax, profile in zip(axes.flat, profiles):
+        x = profile["x_km"]
+        y = profile["y_m"]
+        hmax = profile["max_elevation_m"]
+        hcruise = profile["cruise_altitude_m"]
+        baseline = max(0.0, float(np.min(y)) - 35.0)
+
+        ax.fill_between(x, y, baseline, color=terrain_fill, alpha=0.72, zorder=1)
+        ax.plot(x, y, color=terrain_line, linewidth=1.65, zorder=3)
+        ax.axhline(hcruise, color=cruise_color, linewidth=1.15, linestyle=(0, (5, 3)), zorder=2)
+        ax.scatter(
+            profile["max_distance_km"],
+            hmax,
+            s=19,
+            color=max_color,
+            edgecolor="white",
+            linewidth=0.55,
+            zorder=4,
+        )
+
+        ax.text(
+            0.975,
+            0.945,
+            f"巡航海拔 {hcruise:.1f} m\n最高地形 {hmax:.1f} m",
+            transform=ax.transAxes,
+            ha="right",
+            va="top",
+            fontsize=7.2,
+            color="#8F3522",
+            bbox=dict(facecolor="white", edgecolor="none", alpha=0.72, pad=1.3),
+            zorder=5,
+        )
+        ax.set_title(f"O01 → {profile['service_id']}", loc="left", fontsize=10.5, fontweight="bold", pad=5)
+        ax.set_xlabel("沿线水平距离（km）", fontsize=8.5)
+        ax.set_ylabel("DEM高程（m）", fontsize=8.5)
+        ax.set_xlim(0, profile["distance_m"] / 1000)
+        ax.set_ylim(baseline, hcruise + max(25.0, 0.08 * hcruise))
+        ax.grid(color="#AAB2B6", alpha=0.28, linewidth=0.6)
+        ax.tick_params(labelsize=8, direction="out", length=3)
+
+    fig.suptitle("O01至15个服务区的DEM直线地形剖面与计划巡航海拔", fontsize=18, fontweight="bold", y=0.994)
+    handles = [
+        Patch(facecolor=terrain_fill, edgecolor=terrain_line, label="30米DEM地形剖面"),
+        Line2D([0], [0], color=cruise_color, lw=1.5, linestyle=(0, (5, 3)), label="计划巡航海拔（最高地形＋50 m）"),
+        Line2D([0], [0], marker="o", color="none", markerfacecolor=max_color, markeredgecolor="white", markersize=5.5, label="航段最高地形像元"),
+    ]
+    fig.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 0.976), ncol=3, frameon=False, fontsize=9.2)
+    fig.text(
+        0.5,
+        0.008,
+        "注：剖面按直线实际穿越的30米DEM像元提取；地形曲线仅连接原始像元值，最高值未进行平滑。",
+        ha="center",
+        va="bottom",
+        fontsize=8,
+        color="#4A4A4A",
+    )
+    fig.tight_layout(rect=[0.025, 0.025, 0.99, 0.954], h_pad=1.15, w_pad=1.05)
+
+    stem = out_dir / "task1_all_dem_profiles"
+    fig.savefig(stem.with_suffix(".png"), dpi=400, bbox_inches="tight", facecolor="white")
+    fig.savefig(stem.with_suffix(".tiff"), dpi=400, bbox_inches="tight", facecolor="white")
+    fig.savefig(stem.with_suffix(".pdf"), bbox_inches="tight", facecolor="white")
+    fig.savefig(stem.with_suffix(".svg"), bbox_inches="tight", facecolor="white")
+    plt.close(fig)
+
+    with (out_dir / "task1_all_profile_summary.csv").open("w", encoding="utf-8-sig", newline="") as fobj:
+        writer = csv.writer(fobj)
+        writer.writerow(
+            [
+                "服务区编号",
+                "水平距离_km",
+                "穿越DEM像元数",
+                "最高地面高程_m",
+                "计划巡航海拔_m",
+                "服务区地面海拔_m",
+                "服务区作业海拔_m",
+                "最高像元中心经度",
+                "最高像元中心纬度",
+            ]
+        )
+        for p in profiles:
+            seg = p["max_seg"]
+            writer.writerow(
+                [
+                    p["service_id"],
+                    f"{p['distance_m'] / 1000:.6f}",
+                    len(p["segments"]),
+                    f"{p['max_elevation_m']:.3f}",
+                    f"{p['cruise_altitude_m']:.3f}",
+                    f"{p['service_ground_m']:.3f}",
+                    f"{p['service_work_m']:.3f}",
+                    f"{seg['lon_center']:.7f}",
+                    f"{seg['lat_center']:.7f}",
+                ]
+            )
+
+    with (out_dir / "task1_all_profile_pixels.csv").open("w", encoding="utf-8-sig", newline="") as fobj:
+        writer = csv.writer(fobj)
+        writer.writerow(
+            [
+                "服务区编号",
+                "像元顺序",
+                "DEM行",
+                "DEM列",
+                "距离起点_m",
+                "距离终点_m",
+                "像元中心经度",
+                "像元中心纬度",
+                "地面高程_m",
+                "是否最高像元",
+            ]
+        )
+        for p in profiles:
+            for idx, seg in enumerate(p["segments"], 1):
+                writer.writerow(
+                    [
+                        p["service_id"],
+                        idx,
+                        seg["row"],
+                        seg["col"],
+                        f"{seg['distance_start_m']:.3f}",
+                        f"{seg['distance_end_m']:.3f}",
+                        f"{seg['lon_center']:.7f}",
+                        f"{seg['lat_center']:.7f}",
+                        f"{seg['elevation_m']:.3f}",
+                        "是" if seg is p["max_seg"] else "否",
+                    ]
+                )
+
+
+if __name__ == "__main__":
+    main()
